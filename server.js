@@ -55,8 +55,8 @@ router.get('/', function(req, res) {
 });
 
 router.get('/products', function(req, res) {
-    var sql = "SELECT * FROM ?? LIMIT 3";
-    var inserts = ['products'];
+    var sql = "SELECT * FROM products WHERE Prisinklmoms > ? AND Prisinklmoms < ? LIMIT 10";
+    var inserts = [req.query.priceFrom,req.query.priceMax];
     sql = mysql.format(sql, inserts);
     database.query(sql, function (error, results) {
        if(error) throw error;

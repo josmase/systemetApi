@@ -1,9 +1,11 @@
 {
   "name": "systemetApi",
   "version": "0.0.1",
-  "private": true,
+  "main": "server.js",
   "description": "SystemetApi is used to search systembolagets products",
   "dependencies": {
-    "mysql": "^2.10.2"
+    "mysql": "^2.10.2",
+    "express": "~4.0.0",
+    "body-parser": "~1.0.1"
   }
 }

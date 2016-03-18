@@ -7,6 +7,7 @@
 var express    = require('express');        // call express
 var app        = express();                 // define our app using express
 var bodyParser = require('body-parser');
+var mysql = require('mysql');
 
 // configure app to use bodyParser()
 // this will let us get the data from a POST
@@ -15,6 +16,30 @@ app.use(bodyParser.json());
 
 var port = process.env.PORT || 8080;        // set our port
 
+var systemetapi = require('./systemetApi.js');
+
+// Private (Custom) modules
+var database = mysql.createConnection({
+    host: systemetapi.database.host,
+    port: systemetapi.database.port,
+    database: systemetapi.database.name,
+    user: systemetapi.database.user,
+    password: systemetapi.database.password
+});
+
+systemetapi.objects.app = app;
+systemetapi.objects.database = database;
+
+database.connect(function(err) {
+    if (err) {
+        console.error('error connecting: ' + err.stack);
+        return;
+    }
+    console.log('connected as id ' + database.threadId);
+});
+
+// ROUTES FOR OUR API
+// =============================================================================
 var router = express.Router();              // get an instance of the express Router
 
 // middleware to use for all requests
@@ -29,7 +54,17 @@ router.get('/', function(req, res) {
     res.json({ message: 'hooray! welcome to our api!' });
 });
 
-// more routes for our API will happen here
+router.get('/products', function(req, res) {
+    var sql = "SELECT * FROM ?? LIMIT 3";
+    var inserts = ['products'];
+    sql = mysql.format(sql, inserts);
+    database.query(sql, function (error, results) {
+       if(error) throw error;
+        res.json(results);
+    });
+});
+
+
 
 // REGISTER OUR ROUTES -------------------------------
 // all of our routes will be prefixed with /api
@@ -39,6 +74,3 @@ app.use('/api', router);
 // =============================================================================
 app.listen(port);
 console.log('Magic happens on port ' + port);
-
-
-

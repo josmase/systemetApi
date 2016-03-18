@@ -1,0 +1,9 @@
+{
+  "name": "systemetApi",
+  "version": "0.0.1",
+  "private": true,
+  "description": "SystemetApi is used to search systembolagets products",
+  "dependencies": {
+    "mysql": "^2.10.2"
+  }
+}

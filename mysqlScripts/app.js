@@ -6,12 +6,21 @@ var connection = mysql.createConnection({
     database : 'systemet'
 });
 
-connection.connect();
+connection.connect(function(err) {
+    if (err) {
+        console.error('error connecting: ' + err.stack);
+        return;
+    }
 
-connection.query('SELECT * FROM products limit 10', function(err, rows) {
+    console.log('connected as id ' + connection.threadId);
+});
+
+var options = ['*','Artikelid','1'];
+
+connection.query('SELECT ?? FROM `products` WHERE ?? = ?', options, function(err, rows) {
     if (err) throw err;
 
-    console.log('The solution is: ', rows[0]);
+    console.log( rows[0]);
 });
 
 connection.end();

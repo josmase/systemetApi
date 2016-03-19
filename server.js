@@ -45,7 +45,7 @@ var router = express.Router();              // get an instance of the express Ro
 // middleware to use for all requests
 router.use(function(req, res, next) {
     // do logging
-    console.log('Something is happening.');
+    console.log(req.query);
     next(); // make sure we go to the next routes and don't stop here
 });
 
@@ -55,8 +55,8 @@ router.get('/', function(req, res) {
 });
 
 router.get('/products', function(req, res) {
-    var sql = "SELECT * FROM products WHERE Prisinklmoms > ? AND Prisinklmoms < ? LIMIT 10";
-    var inserts = [req.query.priceFrom,req.query.priceMax];
+    var sql = "SELECT * FROM products WHERE Prisinklmoms > ? AND Prisinklmoms < ? AND Alkoholhalt > 10 AND Prisperliter/Alkoholhalt > 1 ORDER BY Alkoholhalt LIMIT 10 ";
+    var inserts = [req.query.priceMin,req.query.priceMax];
     sql = mysql.format(sql, inserts);
     database.query(sql, function (error, results) {
        if(error) throw error;

@@ -92,6 +92,15 @@ function addToQueryIfExists(key,query) {
             identifier: key.slice(0,-3)
         }
     }
+    else{
+        if(query[key] !== ""){
+            return{
+                sql: " AND ?? LIKE ?",
+                value: "%"+query[key]+"%",
+                identifier: key
+            }
+        }
+    }
 }
 
 function databaseQuery(sql, inserts, res) {

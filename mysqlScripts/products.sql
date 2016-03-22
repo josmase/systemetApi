@@ -1,4 +1,6 @@
-DROP TABLE IF EXISTS products;
+DROP DATABASE IF EXISTS systemet;
+CREATE DATABASE systemet;
+USE systemet;
 CREATE TABLE products (
   Artikelid INT NOT NULL PRIMARY KEY,
   nr  INT,
@@ -28,7 +30,7 @@ CREATE TABLE products (
 );
 
 
-LOAD XML INFILE 'products.xml'
+/*LOAD XML INFILE 'products.xml'
 INTO TABLE products
 ROWS IDENTIFIED BY '<artikel>';
 
@@ -39,7 +41,4 @@ ALTER TABLE products MODIFY Alkoholhalt DECIMAL(4,2);
 
 ALTER TABLE products ADD apk DECIMAL(5,2);
 UPDATE products SET apk = ((Alkoholhalt/100)*Volymiml)/Prisinklmoms;
-
-
-
-SELECT Artikelid FROM products limit 10;
+*/

@@ -1,4 +1,4 @@
-USE systemet;
+
 UPDATE products
 SET Alkoholhalt = SUBSTRING(Alkoholhalt, 1, CHAR_LENGTH(Alkoholhalt) - 1)
 WHERE Alkoholhalt LIKE '%%';

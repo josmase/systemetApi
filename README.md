@@ -16,13 +16,13 @@ Download and install [node.js](https://nodejs.org/en/ "Node.js homepage"), [MySq
 `sh mysqlScripts/setupDatabase.sh`
 
 ###windows
-'mysql -u usernameHere -p < mysqlScripts/products.sql'
+`mysql -u usernameHere -p < mysqlScripts/products.sql`
 Download [systembolagets xml file](http://www.systembolaget.se/api/assortment/products/xml) and rename it to products
 
-'mysql -u usernameHere -p < select @@datadir;'
+`mysql -u usernameHere -p < select @@datadir;`
 Move the products.xml to the "systemet" folder in that folder.
 
-'mysql -u usernameHere -p < mysqlScripts/importWindows.sql' to import the data from the xml file
+`mysql -u usernameHere -p < mysqlScripts/importWindows.sql` to import the data from the xml file
 
-To start the api run 'node server.js'
+To start the api run `node server.js`
 

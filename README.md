@@ -28,7 +28,7 @@ To start the api run `node server.js`
 
 ##Use
 
-To use the api use the url http://localhost:8080/api/products. Then send params using hte column name as key. And if the column is a number use column name Max/Min.
+To use the api use the url http://localhost:8080/api/products. Then send params using the column name as key. And if the column is a number use column name Max/Min.
 
 localhost:8080/api/products?apkMin=1&apkMax=2&Varugrupp=Vin 
 

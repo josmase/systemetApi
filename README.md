@@ -22,7 +22,7 @@ Download [systembolagets xml file](http://www.systembolaget.se/api/assortment/pr
 `mysql -u usernameHere -p < select @@datadir;`
 Move the products.xml to the "systemet" folder in that folder.
 
-`mysql -u usernameHere -p < mysqlScripts/importWindows.sql` to import the data from the xml file
+`mysql -u usernameHere -p < mysqlScripts/importXml.sql` to import the data from the xml file
 
 To start the api run `node server.js`
 

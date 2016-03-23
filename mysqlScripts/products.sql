@@ -28,17 +28,3 @@ CREATE TABLE products (
   Koscher TINYINT,
   RavarorBeskrivning VARCHAR(300)
 );
-
-
-/*LOAD XML INFILE 'products.xml'
-INTO TABLE products
-ROWS IDENTIFIED BY '<artikel>';
-
-UPDATE products
-SET Alkoholhalt = SUBSTRING(Alkoholhalt, 1, CHAR_LENGTH(Alkoholhalt) - 1)
-WHERE Alkoholhalt LIKE '%%';
-ALTER TABLE products MODIFY Alkoholhalt DECIMAL(4,2);
-
-ALTER TABLE products ADD apk DECIMAL(5,2);
-UPDATE products SET apk = ((Alkoholhalt/100)*Volymiml)/Prisinklmoms;
-*/

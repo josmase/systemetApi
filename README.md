@@ -26,3 +26,11 @@ Move the products.xml to the "systemet" folder in that folder.
 
 To start the api run `node server.js`
 
+##Use
+
+To make use the api use the url http://localhost:8080/api/products. Then send params using hte column name as key. And if the coumn is a number use column name Max/Min.
+
+localhost:8080/api/products?apkMin=1&apkMax=2&Varugrupp=Vin Will return all the products with an apk between 1 and 2 with a category like wine.
+
+localhost:8080/api/products?PrisinklmomsMin=1&PrisinklmomsMax=200&Namn=char Will return all the products with a price between 1 and 200 with a name containing char.
+

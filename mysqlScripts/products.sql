@@ -28,3 +28,5 @@ CREATE TABLE products (
   Koscher TINYINT,
   RavarorBeskrivning VARCHAR(300)
 );
+
+

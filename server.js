@@ -25,20 +25,10 @@ var database = mysql.createConnection({
 systemetapi.objects.app = app;
 systemetapi.objects.database = database;
 
-database.connect(function (err) {
-    if (err) {
-        console.error('error connecting: ' + err.stack);
-        return;
-    }
-    console.log('connected as id ' + database.threadId);
-});
-
 var router = express.Router();
 
 // middleware to use for all requests
 router.use(function (req, res, next) {
-    // do logging
-    console.log(req.query);
     next();
 });
 
@@ -85,12 +75,10 @@ function addToQueryIfExists(key,query) {
         }
     }
     else{
-        if(query[key] !== ""){
-            return{
-                sql: " AND ?? LIKE ?",
-                value: "%"+query[key]+"%",
-                identifier: key
-            }
+        return{
+            sql: " AND ?? LIKE ?",
+            value: "%"+query[key]+"%",
+            identifier: key
         }
     }
 }
@@ -98,13 +86,21 @@ function addToQueryIfExists(key,query) {
 function databaseQuery(sql, inserts, res) {
     sql = mysql.format(sql, inserts);
 
+    database.connect(function (err) {
+        if (err) {
+            console.error('error connecting: ' + err.stack);
+            return;
+        }
+        console.log('connected as id ' + database.threadId);
+    });
+
     database.query(sql, function (error, results) {
         if (error) res.json({error:error.code,success:false,query:inserts});
         else res.json(results);
     });
+
+    database.end();
 }
-
-
 
 app.use('/api', router);
 

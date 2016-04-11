@@ -63,27 +63,21 @@ router.get('/products', function (req, res) {
     databaseQuery(sql, inserts, res);
 });
 router.get('/products/:id', function (req, res) {
-    console.log(req.params.id);
     var sql = "SELECT * FROM products WHERE Artikelid = ?";
     var inserts = [req.params.id];
     databaseQuery(sql, inserts, res);
 });
 
 function addToQueryIfExists(key,query) {
-    if (key.slice(-3) === "Max") {
-        if (query[key] == 0) {
-            query[key] = 10000;
-        }
-        return {
+
+    if (key.slice(-3) === "Max" && query[key] >= 0) {
+       return{
             sql: " AND ?? < ?",
             value: query[key],
             identifier: key.slice(0,-3)
         }
     }
-    else if (key.slice(-3) === "Min") {
-        if (query[key] === "") {
-            query[key] = 0;
-        }
+    else if (key.slice(-3) === "Min" && query[key] >= 0) {
         return {
             sql: " AND ?? > ?",
             value: query[key],
@@ -103,10 +97,10 @@ function addToQueryIfExists(key,query) {
 
 function databaseQuery(sql, inserts, res) {
     sql = mysql.format(sql, inserts);
-    console.log(sql);
+
     database.query(sql, function (error, results) {
-        if (error) throw error;
-        res.json(results);
+        if (error) res.json({error:error.code,success:false,query:inserts});
+        else res.json(results);
     });
 }
 

@@ -7,7 +7,7 @@ var exp = {
         host: "localhost",
         port: 3306,
         name: "systemet",
-        user: "root",
+        user: "systemet",
         password: "systemet"
     }
 };

@@ -14,7 +14,7 @@ var port = process.env.PORT || 8000;
 var systemetapi = require('./systemetApi.js');
 
 // Private (Custom) modules
-var database = mysql.createConnection({
+var database = mysql.createPool({
     host: systemetapi.database.host,
     port: systemetapi.database.port,
     database: systemetapi.database.name,
@@ -86,20 +86,19 @@ function addToQueryIfExists(key,query) {
 function databaseQuery(sql, inserts, res) {
     sql = mysql.format(sql, inserts);
 
-    database.connect(function (err) {
+    database.getConnection(function(err, connection) {
         if (err) {
             console.error('error connecting: ' + err.stack);
             return;
         }
-        console.log('connected as id ' + database.threadId);
-    });
+        console.log('connected as id ' + connection.threadId);
 
-    database.query(sql, function (error, results) {
-        if (error) res.json({error:error.code,success:false,query:inserts});
-        else res.json(results);
+        connection.query(sql, function (error, results) {
+              if (error) res.json({error:error.code,success:false,query:inserts});
+              else res.json(results);
+              connection.release();
+        });
     });
-
-    database.end();
 }
 
 app.use('/api', router);

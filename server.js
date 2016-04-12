@@ -2,7 +2,12 @@ var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
 var cors = require('cors');
-var database = require('./database.js')
+var request = require('request');
+var fs = require('fs');
+var database = require('./database.js');
+
+//request('http://www.systembolaget.se/api/assortment/products/xml').pipe(fs.createWriteStream('doodle.xml'))
+
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());

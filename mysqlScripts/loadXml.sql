@@ -1,4 +1,4 @@
 USE systemet;
-LOAD XML INFILE 'products.xml'
+LOAD XML LOCAL INFILE 'products.xml'
 INTO TABLE products
 ROWS IDENTIFIED BY '<artikel>';

@@ -4,10 +4,10 @@ var bodyParser = require('body-parser');
 var cors = require('cors');
 var request = require('request');
 var fs = require('fs');
+var parser = require('xml2json');
 var database = require('./database.js');
 
 //request('http://www.systembolaget.se/api/assortment/products/xml').pipe(fs.createWriteStream('doodle.xml'))
-
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
@@ -24,7 +24,51 @@ router.use(function (req, res, next) {
 });
 
 router.get('/', function (req, res) {
-    res.json({message: 'hooray! welcome to our api!'});
+
+    fs.readFile(__dirname + '/doodle.xml', function (err, data) {
+        var options = {
+            object: true,
+            reversible: false,
+            coerce: true,
+            sanitize: true,
+            trim: true,
+            arrayNotation: false
+        };
+        var result = parser.toJson(data, options);
+
+        var sql = "INSERT INTO products (";
+        var inserts = [];
+        var articles = result.artiklar.artikel;
+        var count = 0;
+        var keys = "";
+
+        for (var key in articles[0]) {
+
+            inserts.push(key);
+        }
+        sql = sql.slice(0,-1);
+        sql += ') VALUES ';
+
+        for (var i = 0; i < 5; i++) {
+            sql += '(';
+            for (var identifier in articles[i]) {
+                mysql+= '?,';
+                if (typeof articles[i][identifier] == 'object') articles[i][identifier] = null;
+                inserts.push(articles[i][identifier]);
+            }
+            console.log(sql +"before");
+            sql = sql.slice(0,-1);
+            console.log(sql);
+            sql += '),'
+        }
+
+
+        res.json({count: count, apa: sql, article: articles[3]});
+        console.log('Done');
+    });
+
+
+    //res.json({message: "Use /products"});
 });
 
 router.get('/products', function (req, res) {

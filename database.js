@@ -1,12 +1,37 @@
 var exp = {
-    query: function (sql, insert, res) {
-        databaseQuery(sql, insert, res)
+    query: function (sql, insert) {
+        return new Promise(function (resolve, reject) {
+            databaseQuery(sql, insert)
+                .then(function (result) {
+                    resolve(result)
+                })
+                .catch(function (err) {
+                    reject(err)
+                });
+        });
+
     },
     setup: function () {
-        setup();
+        return new Promise(function (resolve, reject) {
+            setup()
+                .then(function (result) {
+                    resolve(result)
+                })
+                .catch(function (err) {
+                    reject(err)
+                });
+        });
     },
     insert: function () {
-        insert();
+        return new Promise(function (resolve, reject) {
+            insert()
+                .then(function (result) {
+                    resolve(result)
+                })
+                .catch(function (err) {
+                    reject(err)
+                });
+        });
     }
 };
 
@@ -24,39 +49,46 @@ var database = mysql.createPool({
     port: systemetapi.database.port,
     database: systemetapi.database.name,
     user: systemetapi.database.user,
-    password: systemetapi.database.password
+    password: systemetapi.database.password,
+    connectionLimit: 100
 });
 
-function databaseQuery(sql, inserts, res) {
-    sql = mysql.format(sql, inserts);
-    console.log(sql);
-    console.log("Query built");
-    database.getConnection(function (err, connection) {
-        if (err) {
-            console.error('error connecting: ' + err.stack);
-            return;
-        }
-        console.log('connected as id ' + connection.threadId);
+function databaseQuery(sql, inserts) {
+    return new Promise(function (resolve, reject) {
+        "use strict";
 
-        connection.query(sql, function (error, results) {
-            if (res) {
-                if (error) res.json({error: error, success: false});
-                else res.json(results);
+        sql = mysql.format(sql, inserts);
+
+        database.getConnection(function (err, connection) {
+            if (err) {
+                reject(err);
+            }
+
+            connection.query(sql, function (error, results) {
                 connection.release();
-                return
-            }
-            if (error) console.log({error: error, success: false});
-            else {
-                console.log(results);
-            }
+                if (error) {
+                    reject(error);
+                }
+                else {
+                    resolve(results)
+                }
+            });
+
         });
     });
 }
 
+
 function setup() {
-    fs.readFile(__dirname + '/mysqlScripts/products.sql', function (err, data) {
-        if (err)console.log("Failed to read file");
-        databaseQuery(data.toString(), null);
+    return new Promise(function (resolve, reject) {
+        fs.readFile(__dirname + '/mysqlScripts/products.sql', function (err, data) {
+            if (err)console.log("Failed to read file");
+            databaseQuery(data.toString(), null).then(function (result) {
+                resolve(result);
+            }).catch(function (err) {
+                reject(err);
+            });
+        });
     });
 }
 
@@ -65,56 +97,73 @@ function insert() {
     /* request.get('https://www.systembolaget.se/api/assortment/products/xml', function (error, response, data) {
      if (!error && response.statusCode == 200) {
      */
-    fs.readFile(__dirname + '/doodle.xml', function (err, data) {
-            if (err)console.log("Failed to read file");
 
-            console.log("Data retrieved");
+    return new Promise(function (resolve, reject) {
+        fs.readFile(__dirname + '/doodle.xml', function (err, data) {
+                if (err)reject(err);
 
-            var options = {
-                object: true,
-                reversible: false,
-                coerce: true,
-                sanitize: true,
-                trim: true,
-                arrayNotation: false
-            };
-            var result = parser.toJson(data, options);
+                var options = {
+                    object: true,
+                    reversible: false,
+                    coerce: true,
+                    sanitize: true,
+                    trim: true,
+                    arrayNotation: false
+                };
+                var result = parser.toJson(data, options);
+                var inserts = [];
 
-            var colummns = ['nr', 'Artikelid', 'Varnummer', 'Namn', 'Namn2', 'Prisinklmoms', 'Pant', 'Volymiml',
-                'PrisPerLiter', 'Saljstart', 'Slutlev', 'Varugrupp', 'Forpackning', 'Forslutning', 'Ursprung',
-                'Ursprunglandnamn', 'Producent', 'Leverantor', 'Argang', 'Provadargang', 'Alkoholhalt', 'Sortiment',
-                'Ekologisk', 'Etiskt', 'Koscher', 'RavarorBeskrivning'];
+                var articles = result.artiklar.artikel;
 
-            var sql = "INSERT INTO products (";
-            colummns.forEach(function (currentValue) {
-                sql += currentValue + ","
-            });
-            sql = sql.slice(0, -1);
-            sql += ") VALUES ?";
-            var inserts = [];
-            var articles = result.artiklar.artikel;
+                console.log(articles.length);
+                var columns = ['nr', 'Artikelid', 'Varnummer', 'Namn', 'Namn2', 'Prisinklmoms', 'Pant', 'Volymiml',
+                    'PrisPerLiter', 'Saljstart', 'Slutlev', 'Varugrupp', 'Forpackning', 'Forslutning', 'Ursprung',
+                    'Ursprunglandnamn', 'Producent', 'Leverantor', 'Argang', 'Provadargang', 'Alkoholhalt', 'Sortiment',
+                    'Ekologisk', 'Etiskt', 'Koscher', 'RavarorBeskrivning'];
 
-            console.log("Building query");
-
-            for (var i = 0; i < articles.length/4; i++) {
-                var row = [];
-                var keys = Object.keys(articles[i]);
-                var sak = 0;
-                colummns.forEach(function (currentValue) {
-                    if (currentValue == keys[sak]) {
-                        if (typeof articles[i][keys[sak]] == 'object') articles[i][keys[sak]] = null;
-                        row.push(articles[i][keys[sak]]);
-                        sak++
-                    }
-                    else {
-                        row.push(null)
-                    }
-                });
-                inserts.push(row);
+                var sql = "INSERT INTO products (??)  VALUES ? ON DUPLICATE KEY UPDATE ??=values(??)";
+                console.log("Building query");
+                var i, j, temparray, chunk = 100;
+                for (i = 0, j = articles.length; i < j; i += chunk) {
+                    temparray = articles.slice(i, i + chunk);
+                    buildInsertQuery(temparray, columns, sql, inserts)
+                        .then(function (data) {
+                            databaseQuery(sql, [columns, data, columns[1], columns[1]])
+                                .then((result) => resolve(result))
+                                .catch((err) => reject(err));
+                        }).catch(function (err) {
+                        reject(err)
+                    });
+                }
             }
-            console.log(inserts);
-            databaseQuery(sql, [inserts]);
+        );
+    });
+}
 
+
+function buildInsertQuery(articles, columns) {
+    return new Promise(function (resolve) {
+        "use strict";
+
+        var inserts = [];
+
+        for (var i = 0; i < articles.length; i++) {
+
+            var row = [];
+            var keys = Object.keys(articles[i]);
+            var value = 0;
+
+            columns.forEach(function (currentValue) {
+                if (currentValue == keys[value]) {
+                    if (typeof articles[i][keys[value]] == 'object') articles[i][keys[value]] = null;
+                    row.push(articles[i][keys[value]]);
+                    value++
+                } else {
+                    row.push(null)
+                }
+            });
+            inserts.push(row);
         }
-    );
+        resolve(inserts);
+    });
 }

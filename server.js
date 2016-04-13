@@ -12,8 +12,20 @@ var port = process.env.PORT || 8000;
 
 var router = express.Router();
 
-// database.setup();
-database.insert();
+database.setup()
+    .then(function (result) {
+        console.log(result);
+    })
+    .catch(function (err) {
+        console.error(err);
+    });
+database.insert()
+    .then(function (result) {
+        console.log(result);
+    })
+    .catch(function (err) {
+        console.error(err);
+    });
 
 // middleware to use for all requests
 router.use(function (req, res, next) {

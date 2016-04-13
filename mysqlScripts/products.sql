@@ -1,6 +1,5 @@
-DROP TABLE IF EXISTS products;
 CREATE TABLE IF NOT EXISTS products (
-  Artikelid          INT NOT NULL PRIMARY KEY,
+  Artikelid          INT NOT NULL,
   nr                 INT,
   Varnummer          INT,
   Namn               VARCHAR(70),
@@ -25,6 +24,7 @@ CREATE TABLE IF NOT EXISTS products (
   Ekologisk          TINYINT,
   Etiskt             TINYINT,
   Koscher            TINYINT,
-  RavarorBeskrivning VARCHAR(500)
+  RavarorBeskrivning VARCHAR(500),
+  PRIMARY KEY (Artikelid)
 );
 

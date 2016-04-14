@@ -12,29 +12,97 @@ Download and install [node.js](https://nodejs.org/en/ "Node.js homepage"), [MySq
 
 `npm install`
 
-###linux
-`sh mysqlScripts/setupDatabase.sh`
+Create a user and the dabase with the root user and password you set when setting up mysql
 
-###windows
-`mysql -u usernameHere -p < mysqlScripts/products.sql`
-Download [systembolagets xml file](http://www.systembolaget.se/api/assortment/products/xml) and rename it to products
+`CREATE USER 'systemet'@'localhost' IDENTIFIED BY 'systemet';`
 
-`mysql -u usernameHere -p < select @@datadir;`
-Move the products.xml to the "systemet" folder in that folder.
+`GRANT ALL PRIVILEGES ON systemet. * TO 'systemet'@'localhost';`
 
-`mysql -u usernameHere -p < mysqlScripts/importXml.sql` to import the data from the xml file
+`FLUSH PRIVILEGES;`
 
-To start the api run `node server.js`
+`CREATE DATABASE SYSTEMET;`
 
-##Use
+##Starting the server
 
-To use the api use the url http://localhost:8080/api/products. Then send params using the column name as key. And if the column is a number use column name Max/Min.
+To start the api run `node server.js` in the root project directory
 
-localhost:8080/api/products?apkMin=1&apkMax=2&Varugrupp=Vin 
+##Using the api
 
-Will return all the products with an apk between 1 and 2 with a category like wine.
+###/products
 
-localhost:8080/api/products?PrisinklmomsMin=1&PrisinklmomsMax=200&Namn=char 
+Used to get all the products matching a specific query.
+Use the names of the columns as the key and use Min or Max to get a number within a range.
 
-Will return all the products with a price between 1 and 200 with a name containing char.
+`localhost:8000/api/products?apkMin=1&apkMax=2&Varugrupp=Vin `
+
+To get all the products with a apk between 1 and 2 in the vine category.
+
+`localhost:8000/api/products?PrisinklmomsMin=1&PrisinklmomsMax=200&Namn=dworek `
+
+To get all the prudcts with a price between 1 and 200 with a name like dworek.
+
+###/product/:id
+
+Simply put the Artikelid in the end instead of :id to get the articel with that specific id
+
+`localhost:8000/api/product/1`
+
+To get the product with a Artikelid of 1.
+
+###Columns
+
+Artikelid          INT NOT NULL,
+
+  nr                 INT,
+  
+  Varnummer          INT,
+  
+  Namn               VARCHAR(70),
+  
+  Namn2              VARCHAR(50),
+  
+  Prisinklmoms       INT,
+  
+  Pant               INT,
+  
+  Volymiml           INT,
+  
+  PrisPerLiter       INT,
+  
+  Saljstart          DATE,
+  
+  Slutlev            DATE,
+  
+  Varugrupp          VARCHAR(50),
+  
+  Forpackning        VARCHAR(50),
+  
+  Forslutning        VARCHAR(50),
+  
+  Ursprung           VARCHAR(50),
+  
+  Ursprunglandnamn   VARCHAR(50),
+  
+  Producent          VARCHAR(200),
+  
+  Leverantor         VARCHAR(200),
+  
+  Argang             VARCHAR(10),
+  
+  Provadargang       VARCHAR(20),
+  
+  Alkoholhalt        VARCHAR(7),
+  
+  Sortiment          VARCHAR(10),
+  
+  Ekologisk          TINYINT,
+  
+  Etiskt             TINYINT,
+  
+  Koscher            TINYINT,
+  
+  RavarorBeskrivning VARCHAR(500),
+  
+  apk                DECIMAL(5, 2),
+
 

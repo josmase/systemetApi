@@ -32,6 +32,17 @@ var exp = {
                     reject(err)
                 });
         });
+    },
+    update: function () {
+        return new Promise(function (resolve, reject) {
+            update()
+                .then(function (result) {
+                    resolve(result)
+                })
+                .catch(function (err) {
+                    reject(err)
+                });
+        });
     }
 };
 
@@ -82,7 +93,7 @@ function databaseQuery(sql, inserts) {
 function setup() {
     return new Promise(function (resolve, reject) {
         fs.readFile(__dirname + '/mysqlScripts/products.sql', function (err, data) {
-            if (err)console.log("Failed to read file");
+            if (err)reject(err);
             databaseQuery(data.toString(), null).then(function (result) {
                 resolve(result);
             }).catch(function (err) {
@@ -110,8 +121,6 @@ function insert() {
                     var inserts = [];
 
                     var articles = result.artiklar.artikel;
-
-                    console.log(articles.length);
                     var columns = ['nr', 'Artikelid', 'Varnummer', 'Namn', 'Namn2', 'Prisinklmoms', 'Pant', 'Volymiml',
                         'PrisPerLiter', 'Saljstart', 'Slutlev', 'Varugrupp', 'Forpackning', 'Forslutning', 'Ursprung',
                         'Ursprunglandnamn', 'Producent', 'Leverantor', 'Argang', 'Provadargang', 'Alkoholhalt', 'Sortiment',
@@ -165,5 +174,20 @@ function buildInsertQuery(articles, columns) {
             inserts.push(row);
         }
         resolve(inserts);
+    });
+}
+
+
+function update() {
+    return new Promise(function (resolve, reject) {
+        fs.readFile(__dirname + '/mysqlScripts/update.sql', function (err, data) {
+            var sql = data.toString().replace(/(\r\n|\n|\r)/gm, " ").split(";");
+            sql.pop();
+            for (var i = 0, j = sql.length; i < j; i++) {
+                databaseQuery(sql[i])
+                    .then((result) => resolve(result))
+                    .catch((err) => reject(err));
+            }
+        });
     });
 }

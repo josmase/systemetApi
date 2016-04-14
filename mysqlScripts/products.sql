@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS products (
   Etiskt             TINYINT,
   Koscher            TINYINT,
   RavarorBeskrivning VARCHAR(500),
+  apk                DECIMAL(5, 2),
   PRIMARY KEY (Artikelid)
 );
 

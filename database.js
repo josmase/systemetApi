@@ -2,50 +2,11 @@ var exp = {
     query: function (sql, insert) {
         return new Promise(function (resolve, reject) {
             databaseQuery(sql, insert)
-                .then(function (result) {
-                    resolve(result)
-                })
-                .catch(function (err) {
-                    reject(err)
-                });
-        });
-
-    },
-    setup: function () {
-        return new Promise(function (resolve, reject) {
-            setup()
-                .then(function (result) {
-                    resolve(result)
-                })
-                .catch(function (err) {
-                    reject(err)
-                });
-        });
-    },
-    insert: function () {
-        return new Promise(function (resolve, reject) {
-            insert()
-                .then(function (result) {
-                    resolve(result)
-                })
-                .catch(function (err) {
-                    reject(err)
-                });
-        });
-    },
-    update: function () {
-        return new Promise(function (resolve, reject) {
-            update()
-                .then(function (result) {
-                    resolve(result)
-                })
-                .catch(function (err) {
-                    reject(err)
-                });
+                .then((result) => resolve(result))
+                .catch((err) => reject("Unable to query databse: " + err));
         });
     }
 };
-
 module.exports = exp;
 
 var mysql = require('mysql');
@@ -89,7 +50,6 @@ function databaseQuery(sql, inserts) {
     });
 }
 
-
 function setup() {
     return new Promise(function (resolve, reject) {
         fs.readFile(__dirname + '/mysqlScripts/products.sql', function (err, data) {
@@ -97,13 +57,13 @@ function setup() {
             databaseQuery(data.toString(), null).then(function (result) {
                 resolve(result);
             }).catch(function (err) {
-                reject(err);
+                reject("Unable to query database: " + err);
             });
         });
     });
 }
 
-function insert() {
+function insertData() {
     console.log("Getting data to insert");
     return new Promise(function (resolve, reject) {
         request.get('https://www.systembolaget.se/api/assortment/products/xml', function (error, response, data) {
@@ -135,20 +95,17 @@ function insert() {
                             .then(function (data) {
                                 databaseQuery(sql, [columns, data, columns[1], columns[1]])
                                     .then((result) => resolve(result))
-                                    .catch((err) => reject(err));
-                            }).catch(function (err) {
-                            reject(err)
-                        });
+                                    .catch((err) => reject("Unable to query databse: " + err));
+                            }).catch((err) => reject("Unable to build query: " + err));
                     }
                 }
                 else {
-                    reject(error)
+                    reject("Error getting xml: " + error)
                 }
             }
         );
     });
 }
-
 
 function buildInsertQuery(articles, columns) {
     return new Promise(function (resolve) {
@@ -177,7 +134,6 @@ function buildInsertQuery(articles, columns) {
     });
 }
 
-
 function update() {
     return new Promise(function (resolve, reject) {
         fs.readFile(__dirname + '/mysqlScripts/update.sql', function (err, data) {
@@ -190,4 +146,39 @@ function update() {
             }
         });
     });
+}
+
+function setupDatabase() {
+    console.time("Creating database");
+    setup()
+        .then(function () {
+            console.timeEnd("Creating database");
+            insertDataToDatabase();
+        })
+        .catch(function (err) {
+            console.timeEnd("Creating database");
+            console.error(err);
+        });
+}
+
+function insertDataToDatabase() {
+    console.time("Getting and inserting data");
+    insertData()
+        .then(function () {
+            console.timeEnd("Getting and inserting data");
+            console.time('Updating columns');
+            update()
+                .then(function () {
+                    console.timeEnd('Updating columns');
+                    console.info("All done setting up!");
+                })
+                .catch(function (err) {
+                    console.timeEnd('Updating columns');
+                    console.error(err)
+                });
+        })
+        .catch(function (err) {
+            console.timeEnd("Getting and inserting data");
+            console.error(err);
+        });
 }

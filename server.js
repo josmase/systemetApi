@@ -47,6 +47,7 @@ router.get('/product/:id', function (req, res) {
         .catch((err) => res.json(err));
 });
 
+
 function addToQueryIfExists(key, query) {
 
     if (key.slice(-3) === "Max" && query[key] >= 0) {
@@ -77,37 +78,3 @@ app.use('/api', router);
 app.listen(port);
 console.log('Magic happens on port ' + port);
 
-setup();
-function setup(){
-    console.time("Creating database");
-    database.setup()
-        .then(function () {
-            console.timeEnd("Creating database");
-            insert();
-        })
-        .catch(function (err) {
-            console.timeEnd("Creating database");
-            console.error(err);
-        });
-}
-function insert(){
-    console.time("Getting and inserting data");
-    database.insert()
-        .then(function () {
-            console.timeEnd("Getting and inserting data");
-            console.time('Updating columns');
-            database.update()
-                .then(function () {
-                    console.timeEnd('Updating columns');
-                    console.info("All done setting up!");
-                })
-                .catch(function (err) {
-                    console.timeEnd('Updating columns');
-                    console.error(err)
-                });
-        })
-        .catch(function (err) {
-            console.timeEnd("Getting and inserting data");
-            console.error(err);
-        });
-}

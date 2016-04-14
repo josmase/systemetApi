@@ -28,15 +28,26 @@ To start the api run `node server.js` in the root project directory
 
 ##Using the api
 
-To use the api use the url http://localhost:8080/api/products. Then send params using the column name as key. And if the column is a number use column name Max/Min.
+###/products
 
-`localhost:8080/api/products?apkMin=1&apkMax=2&Varugrupp=Vin `
+Used to get all the products matching a specific query.
+Use the names of the columns as the key and use Min or Max to get a number within a range.
+
+`localhost:8000/api/products?apkMin=1&apkMax=2&Varugrupp=Vin `
 
 To get all the products with a apk between 1 and 2 in the vine category.
 
-`localhost:8080/api/products?PrisinklmomsMin=1&PrisinklmomsMax=200&Namn=dworek `
+`localhost:8000/api/products?PrisinklmomsMin=1&PrisinklmomsMax=200&Namn=dworek `
 
 To get all the prudcts with a price between 1 and 200 with a name like dworek.
+
+###/product/:id
+
+Simply put the Artikelid in the end instead of :id to get the articel with that specific id
+
+`localhost:8000/api/product/1`
+
+TO get the product with a Artikelid of 1.
 
 ###Columns
 

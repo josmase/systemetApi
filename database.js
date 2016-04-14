@@ -182,3 +182,25 @@ function insertDataToDatabase() {
             console.error(err);
         });
 }
+
+function updateInterval(databaseSetup) {
+    var now = new Date();
+    var msTill24 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 24, 0, 0, 0) - now;
+    var msTill12 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0, 0) - now;
+    if (msTill12 < 0) {
+        msTill12 += 86400000;
+    }
+    if (msTill24 < 0) {
+        msTill24 += 86400000;
+    }
+    if (!databaseSetup) {
+        setupDatabase();
+        databaseSetup = true;
+    }
+    if (Math.min(msTill12, msTill24) < 5000) {
+        insertDataToDatabase();
+    }
+    setTimeout(() => updateInterval(databaseSetup), Math.min(msTill12, msTill24));
+}
+
+updateInterval(false);

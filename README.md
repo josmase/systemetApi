@@ -22,7 +22,9 @@ Create a user and the dabase with the root user and password you set when settin
 
 `CREATE DATABASE SYSTEMET;`
 
-To start the api run `node server.js`
+##Starting the server
+
+To start the api run `node server.js` in the root project directory
 
 ##Using the api
 

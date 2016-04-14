@@ -39,7 +39,7 @@ router.get('/products', function (req, res) {
         .then((result) => res.json(result))
         .catch((err) => res.json(err));
 });
-router.get('/products/:id', function (req, res) {
+router.get('/product/:id', function (req, res) {
     var sql = "SELECT * FROM products WHERE Artikelid = ?";
     var inserts = [req.params.id];
     database.query(sql, inserts)

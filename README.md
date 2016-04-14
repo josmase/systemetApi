@@ -47,7 +47,7 @@ Simply put the Artikelid in the end instead of :id to get the articel with that 
 
 `localhost:8000/api/product/1`
 
-TO get the product with a Artikelid of 1.
+To get the product with a Artikelid of 1.
 
 ###Columns
 

@@ -12,7 +12,7 @@ Download and install [node.js](https://nodejs.org/en/ "Node.js homepage"), [MySq
 
 `npm install`
 
-Run as root
+Create a user and the dabase with the root user and password you set when setting up mysql
 
 `CREATE USER 'systemet'@'localhost' IDENTIFIED BY 'systemet';`
 
@@ -20,7 +20,7 @@ Run as root
 
 `FLUSH PRIVILEGES;`
 
-`CREATEA DATABASE SYSTEMET;`
+`CREATE DATABASE SYSTEMET;`
 
 To start the api run `node server.js`
 

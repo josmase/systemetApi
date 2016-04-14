@@ -12,21 +12,6 @@ var port = process.env.PORT || 8000;
 
 var router = express.Router();
 
-database.setup()
-    .then(function (result) {
-        console.log(result);
-    })
-    .catch(function (err) {
-        console.error(err);
-    });
-database.insert()
-    .then(function (result) {
-        console.log(result);
-    })
-    .catch(function (err) {
-        console.error(err);
-    });
-
 // middleware to use for all requests
 router.use(function (req, res, next) {
     next();
@@ -87,3 +72,38 @@ app.use('/api', router);
 
 app.listen(port);
 console.log('Magic happens on port ' + port);
+
+setup();
+function setup(){
+    console.time("Creating database");
+    database.setup()
+        .then(function () {
+            console.timeEnd("Creating database");
+            insert();
+        })
+        .catch(function (err) {
+            console.timeEnd("Creating database");
+            console.error(err);
+        });
+}
+function insert(){
+    console.time("Getting and inserting data");
+    database.insert()
+        .then(function () {
+            console.timeEnd("Getting and inserting data");
+            console.time('Updating columns');
+            database.update()
+                .then(function () {
+                    console.timeEnd('Updating columns');
+                    console.info("All done setting up!");
+                })
+                .catch(function (err) {
+                    console.timeEnd('Updating columns');
+                    console.error(err)
+                });
+        })
+        .catch(function (err) {
+            console.timeEnd("Getting and inserting data");
+            console.error(err);
+        });
+}

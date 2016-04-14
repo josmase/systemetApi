@@ -35,12 +35,16 @@ router.get('/products', function (req, res) {
     }
 
     sql += " ORDER BY apk DESC LIMIT 500";
-    database.query(sql, inserts, res);
+    database.query(sql, inserts)
+        .then((result) => res.json(result))
+        .catch((err) => res.json(err));
 });
 router.get('/products/:id', function (req, res) {
     var sql = "SELECT * FROM products WHERE Artikelid = ?";
     var inserts = [req.params.id];
-    database.query(sql, inserts, res);
+    database.query(sql, inserts)
+        .then((result) => res.json(result))
+        .catch((err) => res.json(err));
 });
 
 function addToQueryIfExists(key, query) {

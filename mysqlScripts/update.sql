@@ -7,3 +7,5 @@ ALTER TABLE products MODIFY Alkoholhalt DECIMAL(4,2);
 
 UPDATE products SET apk = ((Alkoholhalt/100)*Volymiml)/Prisinklmoms;
 
+DELETE FROM products WHERE changed_timestamp < (NOW() - INTERVAL 1 DAY);
+

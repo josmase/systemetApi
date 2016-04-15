@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS products (
   Koscher            TINYINT,
   RavarorBeskrivning VARCHAR(500),
   apk                DECIMAL(5, 2),
+  changed_timestamp          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (Artikelid)
+
 );
 

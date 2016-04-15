@@ -86,14 +86,14 @@ function insertData() {
                         'Ursprunglandnamn', 'Producent', 'Leverantor', 'Argang', 'Provadargang', 'Alkoholhalt', 'Sortiment',
                         'Ekologisk', 'Etiskt', 'Koscher', 'RavarorBeskrivning'];
 
-                    var sql = "INSERT INTO products (??)  VALUES ? ON DUPLICATE KEY UPDATE ??=values(??)";
+                    var sql = "INSERT INTO products (??)  VALUES ? ON DUPLICATE KEY UPDATE `changed_timestamp` = NOW()";
                     console.log("Building query");
                     var i, j, temparray, chunk = 100;
                     for (i = 0, j = articles.length; i < j; i += chunk) {
                         temparray = articles.slice(i, i + chunk);
                         buildInsertQuery(temparray, columns, sql, inserts)
                             .then(function (data) {
-                                databaseQuery(sql, [columns, data, columns[1], columns[1]])
+                                databaseQuery(sql, [columns, data])
                                     .then((result) => resolve(result))
                                     .catch((err) => reject("Unable to query databse: " + err));
                             }).catch((err) => reject("Unable to build query: " + err));

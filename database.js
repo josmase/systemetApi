@@ -3,7 +3,7 @@ var exp = {
         return new Promise(function (resolve, reject) {
             databaseQuery(sql, insert)
                 .then((result) => resolve(result))
-                .catch((err) => reject("Unable to query databse: " + err));
+                .catch((err)=>(reject(err)));
         });
     }
 };
@@ -28,9 +28,9 @@ var database = mysql.createPool({
 function databaseQuery(sql, inserts) {
     return new Promise(function (resolve, reject) {
         "use strict";
-
-        sql = mysql.format(sql, inserts);
-
+        if(inserts){
+            sql = mysql.format(sql, inserts);
+        }
         database.getConnection(function (err, connection) {
             if (err) {
                 reject(err);
@@ -39,6 +39,15 @@ function databaseQuery(sql, inserts) {
             connection.query(sql, function (error, results) {
                 connection.release();
                 if (error) {
+                    if (error.code == "ER_LOCK_DEADLOCK") {
+                        retryQuery(sql, 0)
+                            .then(function (result) {
+                                resolve(result);
+                            })
+                            .catch(function (err) {
+                                reject("Unable to query databse: " + err)
+                            });
+                    }
                     reject(error);
                 }
                 else {
@@ -95,7 +104,7 @@ function insertData() {
                             .then(function (data) {
                                 databaseQuery(sql, [columns, data])
                                     .then((result) => resolve(result))
-                                    .catch((err) => reject("Unable to query databse: " + err));
+                                    .catch((err)=>(reject("Unable to query databse: " + err)));
                             }).catch((err) => reject("Unable to build query: " + err));
                     }
                 }
@@ -181,6 +190,22 @@ function insertDataToDatabase() {
             console.timeEnd("Getting and inserting data");
             console.error(err);
         });
+}
+
+function retryQuery(sql, tries) {
+    return new Promise(function (resolve, reject) {
+        databaseQuery(sql)
+            .then(function (result) {
+                resolve(result);
+            }).catch(function (err) {
+            if (tries < 5) {
+                tries++;
+                console.log('retry');
+                retryQuery(sql, tries)
+            }
+            reject(err);
+        });
+    })
 }
 
 function updateInterval(databaseSetup) {

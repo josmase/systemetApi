@@ -5,6 +5,16 @@ var cors = require('cors');
 var database = require('./database.js');
 var helmet = require('helmet');
 
+var geocoderProvider = 'google';
+var httpAdapter = 'https';
+var extra = {
+    apiKey: 'AIzaSyAz9VB62M7bhTVi5qmToMnrqdbQjq5Xugk',
+    formatter: 'json'
+};
+
+var geocoder = require('node-geocoder')(geocoderProvider, httpAdapter, extra);
+
+
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(cors());
@@ -47,6 +57,29 @@ router.get('/product/:id', function (req, res) {
     database.query(sql, inserts)
         .then((result) => res.json(result))
         .catch((err) => res.json(err));
+});
+
+router.get('/stores', function (req, res) {
+    var position = {
+        lat: Number(req.query.lat),
+        lon: Number(req.query.lon)
+    };
+
+    geocoder.reverse(position)
+        .then(function (response) {
+            res.json(response[0].city);
+        })
+        .catch(function (err) {
+            res.json({
+                success: false,
+                message: 'Failed to get a position', err
+            });
+        });
+    /*var sql = "SELECT * FROM store WHERE city = ?";
+     var inserts = [req.params.id];
+     database.query(sql, inserts)
+     .then((result) => res.json(result))
+     .catch((err) => res.json(err));*/
 });
 
 

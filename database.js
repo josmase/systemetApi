@@ -103,9 +103,9 @@ function insertData() {
                         buildInsertQuery(temparray, columns, sql, inserts)
                             .then(function (data) {
                                 databaseQuery(sql, [columns, data])
-                                    .then((result) => resolve(result))
-                                    .catch((err)=>(reject("Unable to query databse: " + err)));
-                            }).catch((err) => reject("Unable to build query: " + err));
+                                    .then(result => resolve(result))
+                                    .catch(err => reject("Unable to query database: " + err));
+                            }).catch(err => reject("Unable to build query: " + err));
                     }
                 }
                 else {
@@ -228,4 +228,4 @@ function updateInterval(databaseSetup) {
     setTimeout(() => updateInterval(databaseSetup), Math.min(msTill12, msTill24));
 }
 
-updateInterval(false);
+//updateInterval(false);

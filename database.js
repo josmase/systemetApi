@@ -59,7 +59,7 @@ function databaseQuery(sql, inserts) {
     });
 }
 
-function setup(table) {
+function createTables(table) {
     return new Promise(function (resolve, reject) {
         fs.readFile(__dirname + table, function (err, data) {
             if (err)reject(err);
@@ -93,7 +93,6 @@ function insertData(toInsert) {
                     }
                     else if (result.ButikerOmbud) {
                         result = result.ButikerOmbud.ButikOmbud;
-                        delete result['xsi:type'];
                     }
                     else {
                         reject(result, "")
@@ -165,7 +164,7 @@ function update() {
 
 function setupDatabase(toInsert) {
     console.time("Creating " + toInsert.name);
-    setup(toInsert.table)
+    createTables(toInsert.table)
         .then(function () {
             console.timeEnd("Creating " + toInsert.name);
             insertDataToDatabase(toInsert);

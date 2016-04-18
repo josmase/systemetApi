@@ -64,26 +64,31 @@ router.get('/stores', function (req, res) {
         lat: Number(req.query.lat),
         lon: Number(req.query.lon)
     };
-
-    geocoder.reverse(position)
-        .then(function (response) {
-            var sql = "select * from stores where Address4 like ?";
-            var insert = [response[0].city];
-            database.query(sql, insert)
-                .then((result)=>res.json(result))
-                .catch((error)=>res.json(error))
-        })
-        .catch(function (err) {
-            res.json({
-                success: false,
-                message: 'Failed to get a position', err
+    if (position.lat) {
+        geocoder.reverse(position)
+            .then(function (response) {
+                var sql = "select * from stores where Address4 like ?";
+                var insert = [response[0].city];
+                database.query(sql, insert)
+                    .then((result)=>res.json(result))
+                    .catch((error)=>res.json(error))
+            })
+            .catch(function (err) {
+                res.json({
+                    success: false,
+                    message: 'Failed to get a position', err
+                });
             });
-        });
-    /*var sql = "SELECT * FROM store WHERE city = ?";
-     var inserts = [req.params.id];
-     database.query(sql, inserts)
-     .then((result) => res.json(result))
-     .catch((err) => res.json(err));*/
+
+    }
+    else{
+
+        var sql = "SELECT * FROM stores WHERE Address4 like ?";
+        var inserts = [req.query.stad];
+        database.query(sql, inserts)
+            .then((result) => res.json(result))
+            .catch((err) => res.json(err));
+    }
 });
 
 

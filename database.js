@@ -28,7 +28,7 @@ var database = mysql.createPool({
 function databaseQuery(sql, inserts) {
     return new Promise(function (resolve, reject) {
         "use strict";
-        if(inserts){
+        if (inserts) {
             sql = mysql.format(sql, inserts);
         }
         database.getConnection(function (err, connection) {
@@ -59,9 +59,9 @@ function databaseQuery(sql, inserts) {
     });
 }
 
-function setup() {
+function setup(table) {
     return new Promise(function (resolve, reject) {
-        fs.readFile(__dirname + '/mysqlScripts/products.sql', function (err, data) {
+        fs.readFile(__dirname + table, function (err, data) {
             if (err)reject(err);
             databaseQuery(data.toString(), null).then(function (result) {
                 resolve(result);
@@ -72,10 +72,10 @@ function setup() {
     });
 }
 
-function insertData() {
-    console.log("Getting data to insert");
+function insertData(toInsert) {
+    var columns = toInsert.columns, sql = toInsert.sql, url = toInsert.url;
     return new Promise(function (resolve, reject) {
-        request.get('https://www.systembolaget.se/api/assortment/products/xml', function (error, response, data) {
+        request.get(url, function (error, response, data) {
                 if (!error && response.statusCode == 200) {
 
                     var options = {
@@ -87,20 +87,22 @@ function insertData() {
                         arrayNotation: false
                     };
                     var result = parser.toJson(data, options);
-                    var inserts = [];
 
-                    var articles = result.artiklar.artikel;
-                    var columns = ['nr', 'Artikelid', 'Varnummer', 'Namn', 'Namn2', 'Prisinklmoms', 'Pant', 'Volymiml',
-                        'PrisPerLiter', 'Saljstart', 'Slutlev', 'Varugrupp', 'Forpackning', 'Forslutning', 'Ursprung',
-                        'Ursprunglandnamn', 'Producent', 'Leverantor', 'Argang', 'Provadargang', 'Alkoholhalt', 'Sortiment',
-                        'Ekologisk', 'Etiskt', 'Koscher', 'RavarorBeskrivning'];
+                    if (result.artiklar) {
+                        result = result.artiklar.artikel;
+                    }
+                    else if (result.ButikerOmbud) {
+                        result = result.ButikerOmbud.ButikOmbud;
+                        delete result['xsi:type'];
+                    }
+                    else {
+                        reject(result, "")
+                    }
 
-                    var sql = "INSERT INTO products (??)  VALUES ? ON DUPLICATE KEY UPDATE `changed_timestamp` = NOW()";
-                    console.log("Building query");
                     var i, j, temparray, chunk = 100;
-                    for (i = 0, j = articles.length; i < j; i += chunk) {
-                        temparray = articles.slice(i, i + chunk);
-                        buildInsertQuery(temparray, columns, sql, inserts)
+                    for (i = 0, j = result.length; i < j; i += chunk) {
+                        temparray = result.slice(i, i + chunk);
+                        buildInsertQuery(temparray, columns)
                             .then(function (data) {
                                 databaseQuery(sql, [columns, data])
                                     .then(result => resolve(result))
@@ -116,22 +118,26 @@ function insertData() {
     });
 }
 
-function buildInsertQuery(articles, columns) {
+function buildInsertQuery(result, columns) {
     return new Promise(function (resolve) {
         "use strict";
 
         var inserts = [];
 
-        for (var i = 0; i < articles.length; i++) {
+        for (var i = 0; i < result.length; i++) {
 
             var row = [];
-            var keys = Object.keys(articles[i]);
+            var keys = Object.keys(result[i]);
             var value = 0;
-
-            columns.forEach(function (currentValue) {
-                if (currentValue == keys[value]) {
-                    if (typeof articles[i][keys[value]] == 'object') articles[i][keys[value]] = null;
-                    row.push(articles[i][keys[value]]);
+            if (keys[0] == 'xsi:type') {
+                keys.shift();
+            }
+            columns.forEach(function (currentColumn) {
+                if (currentColumn == keys[value]) {
+                    if (typeof result[i][keys[value]] == 'object') {
+                        result[i][keys[value]] = null;
+                    }
+                    row.push(result[i][keys[value]]);
                     value++
                 } else {
                     row.push(null)
@@ -157,38 +163,38 @@ function update() {
     });
 }
 
-function setupDatabase() {
-    console.time("Creating database");
-    setup()
+function setupDatabase(toInsert) {
+    console.time("Creating " + toInsert.name);
+    setup(toInsert.table)
         .then(function () {
-            console.timeEnd("Creating database");
-            insertDataToDatabase();
+            console.timeEnd("Creating " + toInsert.name);
+            insertDataToDatabase(toInsert);
         })
         .catch(function (err) {
-            console.timeEnd("Creating database");
-            console.error(err);
+            console.timeEnd("Creating " + toInsert.name);
+            console.error(err, toInsert.name);
         });
 }
 
-function insertDataToDatabase() {
-    console.time("Getting and inserting data");
-    insertData()
+function insertDataToDatabase(toInsert) {
+    console.time("Getting and inserting data for " + toInsert.name);
+    insertData(toInsert)
         .then(function () {
-            console.timeEnd("Getting and inserting data");
-            console.time('Updating columns');
+            console.timeEnd("Getting and inserting data for " + toInsert.name);
+            console.time('Updating columns for ' + toInsert.name);
             update()
                 .then(function () {
-                    console.timeEnd('Updating columns');
-                    console.info("All done setting up!");
+                    console.timeEnd('Updating columns for ' + toInsert.name);
+                    console.info("All done setting up " + toInsert.name + "!");
                 })
                 .catch(function (err) {
-                    console.timeEnd('Updating columns');
-                    console.error(err)
+                    console.timeEnd('Updating columns for ' + toInsert.name);
+                    console.error(err, toInsert.name)
                 });
         })
         .catch(function (err) {
-            console.timeEnd("Getting and inserting data");
-            console.error(err);
+            console.timeEnd("Getting and inserting data for " + toInsert.name);
+            console.error(err, toInsert.name);
         });
 }
 
@@ -212,6 +218,25 @@ function updateInterval(databaseSetup) {
     var now = new Date();
     var msTill24 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 24, 0, 0, 0) - now;
     var msTill12 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0, 0) - now;
+    var products = {
+        columns: ['nr', 'Artikelid', 'Varnummer', 'Namn', 'Namn2', 'Prisinklmoms', 'Pant', 'Volymiml',
+            'PrisPerLiter', 'Saljstart', 'Slutlev', 'Varugrupp', 'Forpackning', 'Forslutning', 'Ursprung',
+            'Ursprunglandnamn', 'Producent', 'Leverantor', 'Argang', 'Provadargang', 'Alkoholhalt', 'Sortiment',
+            'Ekologisk', 'Etiskt', 'Koscher', 'RavarorBeskrivning'],
+        sql: "INSERT INTO products (??)  VALUES ? ON DUPLICATE KEY UPDATE `changed_timestamp` = NOW()",
+        url: 'https://www.systembolaget.se/api/assortment/products/xml',
+        table: '/mysqlScripts/products.sql',
+        name: "Products"
+    };
+    var stores = {
+        columns: ['Typ', 'Nr', 'Namn', 'Address1', 'Address2', 'Address3', 'Address4', 'Address5',
+            'Telefon', 'ButiksTyp', 'Tjanster', 'SokOrd', 'Oppetider', 'RT90x', 'RT90y'],
+        sql: "INSERT INTO stores (??)  VALUES ? ON DUPLICATE KEY UPDATE `changed_timestamp` = NOW()",
+        url: 'http://www.systembolaget.se/api/assortment/stores/xml',
+        table: '/mysqlScripts/stores.sql',
+        name: 'Stores'
+    };
+
     if (msTill12 < 0) {
         msTill12 += 86400000;
     }
@@ -219,13 +244,16 @@ function updateInterval(databaseSetup) {
         msTill24 += 86400000;
     }
     if (!databaseSetup) {
-        setupDatabase();
+        setupDatabase(products);
+        setupDatabase(stores);
         databaseSetup = true;
     }
     if (Math.min(msTill12, msTill24) < 5000) {
-        insertDataToDatabase();
+
+        insertDataToDatabase(products);
+        insertDataToDatabase(stores);
     }
     setTimeout(() => updateInterval(databaseSetup), Math.min(msTill12, msTill24));
 }
 
-//updateInterval(false);
+updateInterval(false);

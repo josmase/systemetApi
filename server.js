@@ -67,7 +67,11 @@ router.get('/stores', function (req, res) {
 
     geocoder.reverse(position)
         .then(function (response) {
-            res.json(response[0].city);
+            var sql = "select * from stores where Address4 like ?";
+            var insert = [response[0].city];
+            database.query(sql, insert)
+                .then((result)=>res.json(result))
+                .catch((error)=>res.json(error))
         })
         .catch(function (err) {
             res.json({

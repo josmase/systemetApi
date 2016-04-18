@@ -229,7 +229,7 @@ function updateInterval(databaseSetup) {
     };
     var stores = {
         columns: ['Typ', 'Nr', 'Namn', 'Address1', 'Address2', 'Address3', 'Address4', 'Address5',
-            'Telefon', 'ButiksTyp', 'Tjanster', 'SokOrd', 'Oppetider', 'RT90x', 'RT90y'],
+            'Telefon', 'ButiksTyp', 'Tjanster', 'SokOrd', 'Oppettider', 'RT90x', 'RT90y'],
         sql: "INSERT INTO stores (??)  VALUES ? ON DUPLICATE KEY UPDATE `changed_timestamp` = NOW()",
         url: 'http://www.systembolaget.se/api/assortment/stores/xml',
         table: '/mysqlScripts/stores.sql',

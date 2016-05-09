@@ -20,7 +20,7 @@ app.use(bodyParser.json());
 app.use(cors());
 app.use(helmet());
 
-var port = process.env.PORT || 8000;
+var port = process.env.PORT || 3000;
 
 var router = express.Router();
 
@@ -81,7 +81,7 @@ router.get('/stores', function (req, res) {
             });
 
     }
-    else{
+    else {
 
         var sql = "SELECT * FROM stores WHERE Address4 like ?";
         var inserts = [req.query.stad];

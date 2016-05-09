@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS stores (
   ButiksTyp         TINYTEXT,
   Tjanster          TINYTEXT,
   SokOrd            TEXT,
-  Oppettider         TEXT,
+  Oppettider        TEXT,
   Telefon           TINYTEXT,
   RT90x             INT,
   RT90y             INT,

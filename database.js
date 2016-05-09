@@ -255,4 +255,4 @@ function updateInterval(databaseSetup) {
     setTimeout(() => updateInterval(databaseSetup), Math.min(msTill12, msTill24));
 }
 
-updateInterval(false);
+//updateInterval(false);

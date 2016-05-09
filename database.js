@@ -12,7 +12,7 @@ module.exports = exp;
 var mysql = require('mysql');
 var request = require('request');
 var fs = require('fs');
-var parser = require('xml2json');
+var xml2js = require('xml2js');
 var systemetapi = require('./systemetApi.js');
 
 // Private (Custom) modules
@@ -75,18 +75,22 @@ function createTables(table) {
 function insertData(toInsert) {
     var columns = toInsert.columns, sql = toInsert.sql, url = toInsert.url;
     return new Promise(function (resolve, reject) {
-        request.get(url, function (error, response, data) {
+        request.get(url, function (error, response, xml) {
                 if (!error && response.statusCode == 200) {
 
                     var options = {
-                        object: true,
-                        reversible: false,
-                        coerce: true,
-                        sanitize: true,
                         trim: true,
-                        arrayNotation: false
+                        explicitArray: false
                     };
-                    var result = parser.toJson(data, options);
+                    var parser = new xml2js.Parser(options);
+                    parser.parseString(xml, function (err, data) {
+                        if (!err) {
+                            result = JSON.parse(JSON.stringify(data));
+                        }
+                        else {
+                            console.err('Failed parsing xml', err)
+                        }
+                    });
 
                     if (result.artiklar) {
                         result = result.artiklar.artikel;
@@ -97,7 +101,6 @@ function insertData(toInsert) {
                     else {
                         reject(result, "")
                     }
-
                     var i, j, temparray, chunk = 100;
                     for (i = 0, j = result.length; i < j; i += chunk) {
                         temparray = result.slice(i, i + chunk);
@@ -128,7 +131,7 @@ function buildInsertQuery(result, columns) {
             var row = [];
             var keys = Object.keys(result[i]);
             var value = 0;
-            if (keys[0] == 'xsi:type') {
+            if (keys[0] == '$') {
                 keys.shift();
             }
             columns.forEach(function (currentColumn) {
@@ -219,7 +222,7 @@ function updateInterval(databaseSetup) {
     var msTill12 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0, 0) - now;
     var products = {
         columns: ['nr', 'Artikelid', 'Varnummer', 'Namn', 'Namn2', 'Prisinklmoms', 'Pant', 'Volymiml',
-            'PrisPerLiter', 'Saljstart', 'Slutlev', 'Varugrupp', 'Forpackning', 'Forslutning', 'Ursprung',
+            'PrisPerLiter', 'Saljstart', 'Utgått', 'Varugrupp', 'Typ', 'Stil', 'Forpackning', 'Forslutning', 'Ursprung',
             'Ursprunglandnamn', 'Producent', 'Leverantor', 'Argang', 'Provadargang', 'Alkoholhalt', 'Sortiment',
             'Ekologisk', 'Etiskt', 'Koscher', 'RavarorBeskrivning'],
         sql: "INSERT INTO products (??)  VALUES ? ON DUPLICATE KEY UPDATE `changed_timestamp` = NOW()",
@@ -255,4 +258,4 @@ function updateInterval(databaseSetup) {
     setTimeout(() => updateInterval(databaseSetup), Math.min(msTill12, msTill24));
 }
 
-//updateInterval(false);
+updateInterval(false);

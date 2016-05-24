@@ -15,7 +15,6 @@ var fs = require('fs');
 var xml2js = require('xml2js');
 var systemetapi = require('./systemetApi.js');
 
-// Private (Custom) modules
 var database = mysql.createPool({
     host: systemetapi.database.host,
     port: systemetapi.database.port,
@@ -24,7 +23,12 @@ var database = mysql.createPool({
     password: systemetapi.database.password,
     connectionLimit: 100
 });
-
+/**
+ * Send and return the result of a formatted query
+ * @param {string} sql - The unformatted sql string
+ * @param {object} inserts - The value to insert into the sql string
+ * @returns {Promise}
+ */
 function databaseQuery(sql, inserts) {
     return new Promise(function (resolve, reject) {
         "use strict";
@@ -59,6 +63,11 @@ function databaseQuery(sql, inserts) {
     });
 }
 
+/**
+ * Reads a sql file with the name of the table param and runs the file. Used for creating the tables needed
+ * @param {string} table - Name of the table to read
+ * @returns {Promise}
+ */
 function createTables(table) {
     return new Promise(function (resolve, reject) {
         fs.readFile(__dirname + table, function (err, data) {
@@ -71,7 +80,11 @@ function createTables(table) {
         });
     });
 }
-
+/**
+ * Get and insert the data from systembolaget
+ * @param {object} toInsert - Contains columns for the data, the sql string and url to the data
+ * @returns {Promise}
+ */
 function insertData(toInsert) {
     var columns = toInsert.columns, sql = toInsert.sql, url = toInsert.url;
     return new Promise(function (resolve, reject) {
@@ -120,10 +133,14 @@ function insertData(toInsert) {
     });
 }
 
+/**
+ * Compares the result to the columns to ensure that all columns get a value
+ * @param {object} result - Array containing the data to insert
+ * @param {object} columns - Array with all the columns expected
+ * @returns {Promise}
+ */
 function buildInsertQuery(result, columns) {
     return new Promise(function (resolve) {
-        "use strict";
-
         var inserts = [];
 
         for (var i = 0; i < result.length; i++) {
@@ -151,6 +168,10 @@ function buildInsertQuery(result, columns) {
     });
 }
 
+/**
+ * Reads and runs the update.sql file used for updating the type of columns and the data in them
+ * @returns {Promise}
+ */
 function update() {
     return new Promise(function (resolve, reject) {
         fs.readFile(__dirname + '/mysqlScripts/update.sql', function (err, data) {
@@ -165,6 +186,10 @@ function update() {
     });
 }
 
+/**
+ * Create the table specified in toInsert.name
+ * @param {object} toInsert - Object containing the name of the table to setup
+ */
 function setupDatabase(toInsert) {
     console.time("Creating " + toInsert.name);
     createTables(toInsert.table)
@@ -178,6 +203,10 @@ function setupDatabase(toInsert) {
         });
 }
 
+/**
+ * Starts a timer and runs insertData
+ * @param {object} toInsert Contains the name of the table to insert data to
+ */
 function insertDataToDatabase(toInsert) {
     console.time("Getting and inserting data for " + toInsert.name);
     insertData(toInsert)
@@ -200,6 +229,12 @@ function insertDataToDatabase(toInsert) {
         });
 }
 
+/**
+ * Retry a query while tries < 5
+ * @param {string} sql - The sql to retry
+ * @param {number} tries - Amount of times the query have been tried
+ * @returns {Promise}
+ */
 function retryQuery(sql, tries) {
     return new Promise(function (resolve, reject) {
         databaseQuery(sql)
@@ -216,6 +251,10 @@ function retryQuery(sql, tries) {
     })
 }
 
+/**
+ * At first run it runs databaseSetup and insertToDatabase. Then runs itself at 12:00 and 24:00 but only runs insertToDatabase
+ * @param {boolean} databaseSetup - If false databaseSetup has not been run, otherwise it has been run.
+ */
 function updateInterval(databaseSetup) {
     var now = new Date();
     var msTill24 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 24, 0, 0, 0) - now;

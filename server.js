@@ -33,6 +33,9 @@ router.get('/', function (req, res) {
     res.json({message: "Use /products"});
 });
 
+/**
+ * Returns all the products matching the filter
+ */
 router.get('/products', function (req, res) {
     var sql = "SELECT * FROM products WHERE nr > 0";
     var inserts = [];
@@ -51,6 +54,10 @@ router.get('/products', function (req, res) {
         .then((result) => res.json(result))
         .catch((err) => res.json(err));
 });
+
+/**
+ * returns a product with the matching id
+ */
 router.get('/product/:id', function (req, res) {
     var sql = "SELECT * FROM products WHERE Artikelid = ?";
     var inserts = [req.params.id];
@@ -59,6 +66,9 @@ router.get('/product/:id', function (req, res) {
         .catch((err) => res.json(err));
 });
 
+/**
+ * Returns all stores in the same town as in the request. Works with latitude and longitude or the name of the city
+ */
 router.get('/stores', function (req, res) {
     var position = {
         lat: Number(req.query.lat),
@@ -91,7 +101,12 @@ router.get('/stores', function (req, res) {
     }
 });
 
-
+/**
+ * If last three chars is min or max return matching sql string, otherwise return a string matching by like
+ * @param key
+ * @param query
+ * @returns {*}
+ */
 function addToQueryIfExists(key, query) {
 
     if (key.slice(-3) === "Max" && query[key] >= 0) {

@@ -24,7 +24,7 @@ if (cluster.isMaster) {
     var app = express();
     var bodyParser = require('body-parser');
     var cors = require('cors');
-    //var database = require('./database.js');
+    var database = require('./database.js');
     var helmet = require('helmet');
 
     var geocoderProvider = 'google';

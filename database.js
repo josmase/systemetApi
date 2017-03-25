@@ -245,7 +245,7 @@ function updateInterval(databaseSetup)
 	    {
 	      sql :
 		  "INSERT INTO products ??  VALUES ?? ON DUPLICATE KEY UPDATE `changed_timestamp` = NOW()",
-	      url : 'http://www.systembolaget.se/api/assortment/stores/xml',
+	      url : 'http://www.systembolaget.se/api/assortment/products/xml',
 	      table : '/mysqlScripts/products.sql',
 	      name : "Products"
 	    };

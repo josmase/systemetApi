@@ -1,6 +1,9 @@
 var exp = {
 	query : function(sql, insert) {
-	    return databaseQuery(sql, insert);
+		return databaseQuery(sql, insert);
+	},
+	setup : function() {
+		updateInterval(false);
 	}
 };
 module.exports = exp;
@@ -242,7 +245,7 @@ function updateInterval(databaseSetup)
 	    {
 	      sql :
 		  "INSERT INTO products ??  VALUES ?? ON DUPLICATE KEY UPDATE `changed_timestamp` = NOW()",
-	      url : 'http://www.systembolaget.se/api/assortment/products/xml',
+	      url : 'http://www.systembolaget.se/api/assortment/stores/xml',
 	      table : '/mysqlScripts/products.sql',
 	      name : "Products"
 	    };
@@ -263,15 +266,13 @@ function updateInterval(databaseSetup)
 	}
 	if (!databaseSetup) {
 		setupDatabase(products);
-		setupDatabase(stores);
+		// setupDatabase(stores);
 		databaseSetup = true;
 	}
 	if (Math.min(msTill12, msTill24) < 5000) {
 		insertFromUrl(products);
-		insertFromUrl(stores);
+		// insertFromUrl(stores);
 	}
 	setTimeout(() => updateInterval(databaseSetup),
 		   Math.min(msTill12, msTill24));
 }
-
-updateInterval(false);

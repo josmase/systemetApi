@@ -1,9 +1,25 @@
+const cluster = require('cluster');
+const http = require('http');
+const numCPUs = require('os').cpus().length;
+var database = require('./database.js');
 
+if (cluster.isMaster) {
+  console.log(`Master ${process.pid} is running`);
+database.setup();
+
+  // Fork workers.
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+
+  cluster.on('exit', (worker, code, signal) => {
+    console.log(`worker ${worker.process.pid} died`);
+  });
+} else {
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
 var cors = require('cors');
-var database = require('./database.js');
 var helmet = require('helmet');
 
 var geocoderProvider = 'google';
@@ -24,6 +40,7 @@ app.use(helmet());
 var port = process.env.PORT || 3000;
 
 var router = express.Router();
+
 
 // middleware to use for all requests
 router.use(function (req, res, next) {
@@ -135,4 +152,6 @@ function addToQueryIfExists(key, query) {
 
 app.use('/api', router);
 
-app.listen(port);
+    app.listen(port);
+     console.log(`Worker ${process.pid} started`);
+}

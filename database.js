@@ -266,12 +266,12 @@ function updateInterval(databaseSetup)
 	}
 	if (!databaseSetup) {
 		setupDatabase(products);
-		// setupDatabase(stores);
+		setupDatabase(stores);
 		databaseSetup = true;
 	}
 	if (Math.min(msTill12, msTill24) < 5000) {
 		insertFromUrl(products);
-		// insertFromUrl(stores);
+		insertFromUrl(stores);
 	}
 	setTimeout(() => updateInterval(databaseSetup),
 		   Math.min(msTill12, msTill24));

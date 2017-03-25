@@ -1,10 +1,6 @@
 var exp = {
 	query : function(sql, insert) {
-		return new Promise(function(resolve, reject) {
-			databaseQuery(sql, insert)
-			    .then((result) => resolve(result))
-			    .catch((err) => (reject(err)));
-		});
+	    return databaseQuery(sql, insert);
 	}
 };
 module.exports = exp;
@@ -32,11 +28,12 @@ var database = mysql.createPool({
 function databaseQuery(sql, inserts)
 {
 	return new Promise(function(resolve, reject) {
-	    "use strict";
-	   	if (inserts) {
+		"use strict";
+		if (inserts) {
 			sql = mysql.format(sql, inserts);
 		}
 		database.getConnection(function(err, connection) {
+
 			if (err) {
 				reject(err);
 			}
@@ -44,17 +41,6 @@ function databaseQuery(sql, inserts)
 			connection.query(sql, function(error, results) {
 				connection.release();
 				if (error) {
-					if (error.code == "ER_LOCK_DEADLOCK") {
-						retryQuery(sql, 0)
-						    .then(function(result) {
-							    resolve(result);
-						    })
-						    .catch(function(err) {
-							    reject(
-								"Unable to query databse: " +
-								err)
-						    });
-					}
 					reject(error);
 				} else {
 					resolve(results)
@@ -88,68 +74,75 @@ function createTables(table)
 	});
 }
 /**
- * Get and insert the data from systembolaget
- * @param {object} toInsert - Contains columns for the data, the sql string and
- * url to the data
+ * Insert the data from xml file with the format given in sql and returns a
+ * promise that resolves when all the data is inserted
+ * @param {object} xml - The data in XML form
+ * @param {string] sql - The SQL string that will be used for making the insert
  * @returns {Promise}
  */
-function insertData(toInsert)
+function insertXml(xml, sql)
 {
-	var columns = toInsert.columns, sql = toInsert.sql, url = toInsert.url;
+	return new Promise(function(resolve, reject) {
+		result = parseXml(xml);
 
-	getUrl(url)
-	    .then((xml) => {
-		    result = parseXml(xml);
+		if (result.artiklar) {
+			result = result.artiklar.artikel;
+		} else if (result.ButikerOmbud) {
+			result = result.ButikerOmbud.ButikOmbud;
+		} else {
+			reject("Something went wrong parsing xml");
+		}
 
-		    if (result.artiklar) {
-			    result = result.artiklar.artikel;
-		    } else if (result.ButikerOmbud) {
-			    result = result.ButikerOmbud.ButikOmbud;
-		    }
+		for (i = 0; i < result.length; i++) {
+			var data = buildInsertQuery(result[i]);
+			databaseQuery(sql, data).catch((err) => {
+				reject(err);
+			});
+		}
 
-		    for (i = 0; i < result.length; i++) {
-			    var data = buildInsertQuery(result[i]);
-			    databaseQuery(sql, data).catch((err) => {
-				    return err;
-			    });
-		    }
-		    return true;
-
-	    })
-	    .catch((err) => {
-		    return err;
-	    });
+		resolve(true);
+	});
 }
+/**
+ * Gets data from an URL and returns a promise
+ *@param {string} url - The url
+ *@return {promise}
+*/
 function getUrl(url)
 {
 	return new Promise(function(resolve, reject) {
-		request.get(url, function(error, response, xml) {
-			if (error || response.statusCode != 200) {
-				reject("Error getting xml: " + error)
+		request.get(url, function(err, response, data) {
+			if (!err && response.statusCode == 200) {
+				resolve(data);
 			}
-			resolve(xml);
+			reject(err);
 		});
 	});
 }
+
+/**
+ * Parses XML to JSON
+ * @param {object} xml - the XML to parse to JSON
+ * @return {object} input parsed as JSON
+*/
 function parseXml(xml)
 {
 	var options = {trim : true, explicitArray : false};
 	var parser = new xml2js.Parser(options);
-	result = null;
+	result = false;
 	parser.parseString(xml, function(err, data) {
 		if (!err) {
 			result = JSON.parse(JSON.stringify(data));
 		} else {
-			console.err('Failed parsing xml', err)
+			console.error('Failed parsing xml', err)
 		}
 	});
 	return result;
 }
 /**
- * Compares the result to the columns to ensure that all columns get a value
- * @param {object} result - Array containing the data to insert
- * @param {object} columns - Array with all the columns expected
- * @returns {Promise}
+ * Creates two arrays with keys and values of the current product
+ * @param {object} obj - THe object to work with
+ * @returns {array} array containing the keys and values
  */
 function buildInsertQuery(obj)
 {
@@ -159,7 +152,7 @@ function buildInsertQuery(obj)
 		keys.push(key);
 		values.push(obj[key]);
 	}
- 	return [ keys, values ];
+	return [ keys, values ];
 }
 
 /**
@@ -170,19 +163,19 @@ function buildInsertQuery(obj)
 function update()
 {
 	return new Promise(function(resolve, reject) {
-		fs.readFile(
-		    __dirname + '/mysqlScripts/update.sql',
-		    function(err, data) {
-			    var sql = data.toString()
-					  .replace(/(\r\n|\n|\r)/gm, " ")
-					  .split(";");
-			    sql.pop();
-			    for (var i = 0, j = sql.length; i < j; i++) {
-				    databaseQuery(sql[i])
-					.then((result) => resolve(result))
-					.catch((err) => reject(err));
-			    }
-		    });
+		var path = __dirname + '/mysqlScripts/update.sql';
+
+		fs.readFile(path, function(err, data) {
+			var sql = data.toString()
+				      .replace(/(\r\n|\n|\r)/gm, " ")
+				      .split(";");
+			sql.pop();
+			for (var i = 0, j = sql.length; i < j; i++) {
+				databaseQuery(sql[i]).catch((err) =>
+								reject(err));
+			}
+			resolve(result);
+		});
 	});
 }
 
@@ -196,7 +189,7 @@ function setupDatabase(toInsert)
 	createTables(toInsert.table)
 	    .then(function() {
 		    console.timeEnd("Creating " + toInsert.name);
-		    insertDataToDatabase(toInsert);
+		    insertFromUrl(toInsert);
 	    })
 	    .catch(function(err) {
 		    console.timeEnd("Creating " + toInsert.name);
@@ -208,55 +201,26 @@ function setupDatabase(toInsert)
  * Starts a timer and runs insertData
  * @param {object} toInsert Contains the name of the table to insert data to
  */
-function insertDataToDatabase(toInsert)
+function insertFromUrl(toInsert)
 {
-	console.time("Getting and inserting data for " + toInsert.name);
-	var result = insertData(toInsert);
-	if (result) {
-		console.timeEnd("Getting and inserting data for " +
-				toInsert.name);
-		console.time('Updating columns for ' + toInsert.name);
-		update()
-		    .then(function() {
-			    console.timeEnd('Updating columns for ' +
-					    toInsert.name);
-			    console.info("All done setting up " +
-					 toInsert.name + "!");
-		    })
-		    .catch(function(err) {
-			    console.timeEnd('Updating columns for ' +
-					    toInsert.name);
-			    console.error(err, toInsert.name)
-		    });
-	} else {
-		console.timeEnd("Getting and inserting data for " +
-				toInsert.name);
-		console.error(result, toInsert.name);
-	}
-}
+	console.time('Getting file from url ' + toInsert.url);
+	getUrl(toInsert.url)
+	    .then(data => {
+		    console.timeEnd('Getting file from url ' + toInsert.url);
+		    console.time("Inserting data for " + toInsert.name);
+		    return insertXml(data, toInsert.sql)
+	    })
+	    .then(data => {
+		    console.timeEnd("Inserting data for " + toInsert.name);
+		    console.time('Updating columns for ' + toInsert.name);
 
-/**
- * Retry a query while tries < 5
- * @param {string} sql - The sql to retry
- * @param {number} tries - Amount of times the query have been tried
- * @returns {Promise}
- */
-function retryQuery(sql, tries)
-{
-	return new Promise(function(resolve, reject) {
-		databaseQuery(sql)
-		    .then(function(result) {
-			    resolve(result);
-		    })
-		    .catch(function(err) {
-			    if (tries < 5) {
-				    tries++;
-				    console.log('retry');
-				    retryQuery(sql, tries)
-			    }
-			    reject(err);
-		    });
-	})
+		    return update()
+	    })
+	    .then(() => {
+		    console.timeEnd('Updating columns for ' + toInsert.name);
+		    console.info("All done setting up " + toInsert.name + "!");
+	    })
+	    .catch(err => {console.error(err, toInsert.name)});
 }
 
 /**
@@ -276,35 +240,14 @@ function updateInterval(databaseSetup)
 		       now;
 	var products =
 	    {
-	      columns : [
-		      'nr',	   'Artikelid',
-		      'Varnummer',    'Namn',
-		      'Namn2',	'Prisinklmoms',
-		      'Pant',	 'Volymiml',
-		      'PrisPerLiter', 'Saljstart',
-		      'Utgått',       'Varugrupp',
-		      'Typ',	  'Stil',
-		      'Forpackning',  'Forslutning',
-		      'Ursprung',     'Ursprunglandnamn',
-		      'Producent',    'Leverantor',
-		      'Argang',       'Provadargang',
-		      'Alkoholhalt',  'Sortiment',
-		      'Ekologisk',    'Etiskt',
-		      'Koscher',      'RavarorBeskrivning'
-	      ],
 	      sql :
 		  "INSERT INTO products ??  VALUES ?? ON DUPLICATE KEY UPDATE `changed_timestamp` = NOW()",
-	      url : 'https://josmase.se/xml.xml',
+	      url : 'http://www.systembolaget.se/api/assortment/products/xml',
 	      table : '/mysqlScripts/products.sql',
 	      name : "Products"
 	    };
 	var stores =
 	    {
-	      columns : [
-		      'Typ', 'Nr', 'Namn', 'Address1', 'Address2', 'Address3',
-		      'Address4', 'Address5', 'Telefon', 'ButiksTyp',
-		      'Tjanster', 'SokOrd', 'Oppettider', 'RT90x', 'RT90y'
-	      ],
 	      sql :
 		  "INSERT INTO stores (??)  VALUES ? ON DUPLICATE KEY UPDATE `changed_timestamp` = NOW()",
 	      url : 'http://www.systembolaget.se/api/assortment/stores/xml',
@@ -320,12 +263,12 @@ function updateInterval(databaseSetup)
 	}
 	if (!databaseSetup) {
 		setupDatabase(products);
-		// setupDatabase(stores);
+		setupDatabase(stores);
 		databaseSetup = true;
 	}
 	if (Math.min(msTill12, msTill24) < 5000) {
-		insertDataToDatabase(products);
-		i // nsertDataToDatabase(stores);
+		insertFromUrl(products);
+		insertFromUrl(stores);
 	}
 	setTimeout(() => updateInterval(databaseSetup),
 		   Math.min(msTill12, msTill24));

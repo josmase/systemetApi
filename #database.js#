@@ -37,7 +37,8 @@ function databaseQuery(sql, inserts)
 			sql = mysql.format(sql, inserts);
 		}
 		database.getConnection(function(err, connection) {
-			if (err) {
+
+		    if (err) {
 				reject(err);
 			}
 
@@ -63,6 +64,9 @@ function databaseQuery(sql, inserts)
 
 		});
 	});
+}
+
+function queryHandler(){
 }
 
 /**

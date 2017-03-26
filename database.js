@@ -11,7 +11,6 @@ module.exports = exp;
 var mysql = require('mysql');
 var request = require('request');
 var fs = require('fs');
-var xml2js = require('xml2js');
 var systemetapi = require('./systemetApi.js');
 
 var database = mysql.createPool({
@@ -76,36 +75,23 @@ function createTables(table)
 		});
 	});
 }
-/**
- * Insert the data from xml file with the format given in sql and returns a
- * promise that resolves when all the data is inserted
- * @param {object} xml - The data in XML form
- * @param {string] sql - The SQL string that will be used for making the insert
- * @returns {Promise}
- */
-function insertXml(xml, sql)
+/**Convert fs.writefile to a promise
+ * @param {string} path - path including filename for the file to write
+ * @param {string} data - the data to write to the file
+ * @return {promise}
+*/
+function writeFile(path, data)
 {
 	return new Promise(function(resolve, reject) {
-		result = parseXml(xml);
-
-		if (result.artiklar) {
-			result = result.artiklar.artikel;
-		} else if (result.ButikerOmbud) {
-			result = result.ButikerOmbud.ButikOmbud;
-		} else {
-			reject("Something went wrong parsing xml");
-		}
-
-		for (i = 0; i < result.length; i++) {
-			var data = buildInsertQuery(result[i]);
-			databaseQuery(sql, data).catch((err) => {
-				reject(err);
-			});
-		}
-
-		resolve(true);
+		fs.writeFile(path, data, function(err) {
+			if (err) {
+				reject(err)
+			}
+			resolve();
+		});
 	});
 }
+
 /**
  * Gets data from an URL and returns a promise
  *@param {string} url - The url
@@ -121,41 +107,6 @@ function getUrl(url)
 			reject(err);
 		});
 	});
-}
-
-/**
- * Parses XML to JSON
- * @param {object} xml - the XML to parse to JSON
- * @return {object} input parsed as JSON
-*/
-function parseXml(xml)
-{
-	var options = {trim : true, explicitArray : false};
-	var parser = new xml2js.Parser(options);
-	result = false;
-	parser.parseString(xml, function(err, data) {
-		if (!err) {
-			result = JSON.parse(JSON.stringify(data));
-		} else {
-			console.error('Failed parsing xml', err)
-		}
-	});
-	return result;
-}
-/**
- * Creates two arrays with keys and values of the current product
- * @param {object} obj - THe object to work with
- * @returns {array} array containing the keys and values
- */
-function buildInsertQuery(obj)
-{
-	var keys = [];
-	var values = [];
-	for (var key in obj) {
-		keys.push(key);
-		values.push(obj[key]);
-	}
-	return [ keys, values ];
 }
 
 /**
@@ -177,7 +128,7 @@ function update()
 				databaseQuery(sql[i]).catch((err) =>
 								reject(err));
 			}
-			resolve(result);
+			resolve();
 		});
 	});
 }
@@ -186,7 +137,7 @@ function update()
  * Create the table specified in toInsert.name
  * @param {object} toInsert - Object containing the name of the table to setup
  */
-function setupDatabase(toInsert)
+function createTable(toInsert)
 {
 	console.time("Creating " + toInsert.name);
 	createTables(toInsert.table)
@@ -206,12 +157,20 @@ function setupDatabase(toInsert)
  */
 function insertFromUrl(toInsert)
 {
+	var path = __dirname + '/' + toInsert.name + '.xml';
 	console.time('Getting file from url ' + toInsert.url);
+
 	getUrl(toInsert.url)
 	    .then(data => {
 		    console.timeEnd('Getting file from url ' + toInsert.url);
 		    console.time("Inserting data for " + toInsert.name);
-		    return insertXml(data, toInsert.sql)
+
+		    return writeFile(path, data);
+	    })
+	    .then(() => {
+		    var inserts = [ path, toInsert.name, toInsert.identifier ];
+
+		    return databaseQuery(toInsert.sql, inserts)
 	    })
 	    .then(data => {
 		    console.timeEnd("Inserting data for " + toInsert.name);
@@ -234,45 +193,48 @@ function insertFromUrl(toInsert)
  */
 function updateInterval(databaseSetup)
 {
-	var now = new Date();
-	var msTill24 = new Date(now.getFullYear(), now.getMonth(),
-				now.getDate(), 24, 0, 0, 0) -
-		       now;
-	var msTill12 = new Date(now.getFullYear(), now.getMonth(),
-				now.getDate(), 12, 0, 0, 0) -
-		       now;
 	var products =
 	    {
 	      sql :
-		  "INSERT INTO products ??  VALUES ?? ON DUPLICATE KEY UPDATE `changed_timestamp` = NOW()",
+		  "LOAD XML LOCAL INFILE ? INTO TABLE ?? ROWS IDENTIFIED BY ? set `changed_timestamp` = NOW()",
 	      url : 'http://www.systembolaget.se/api/assortment/products/xml',
 	      table : '/mysqlScripts/products.sql',
-	      name : "Products"
+	      name : 'products',
+	      identifier : '<artikel>'
 	    };
 	var stores =
 	    {
 	      sql :
-		  "INSERT INTO stores (??)  VALUES ? ON DUPLICATE KEY UPDATE `changed_timestamp` = NOW()",
+		  "LOAD XML LOCAL INFILE ? INTO TABLE ?? ROWS IDENTIFIED BY ? set `changed_timestamp` = NOW()",
 	      url : 'http://www.systembolaget.se/api/assortment/stores/xml',
 	      table : '/mysqlScripts/stores.sql',
-	      name : 'Stores'
+	      name : 'stores',
+	      identifier : '<ButikOmbud>'
 	    };
 
-	if (msTill12 < 0) {
-		msTill12 += 86400000;
+	var now = new Date();
+	var msTo24 = new Date(now.getFullYear(), now.getMonth(), now.getDate(),
+			      24, 0, 0, 0) -
+		     now;
+	var msTo12 = new Date(now.getFullYear(), now.getMonth(), now.getDate(),
+			      12, 0, 0, 0) -
+		     now;
+
+	if (msTo12 < 0) {
+		msTo12 += 86400000;
 	}
-	if (msTill24 < 0) {
-		msTill24 += 86400000;
+	if (msTo24 < 0) {
+		msTo24 += 86400000;
 	}
 	if (!databaseSetup) {
-		setupDatabase(products);
-		setupDatabase(stores);
+		createTable(products);
+		createTable(stores);
 		databaseSetup = true;
 	}
-	if (Math.min(msTill12, msTill24) < 5000) {
+	if (Math.min(msTo12, msTo24) < 5000) {
 		insertFromUrl(products);
 		insertFromUrl(stores);
 	}
 	setTimeout(() => updateInterval(databaseSetup),
-		   Math.min(msTill12, msTill24));
+		   Math.min(msTo12, msTo24));
 }

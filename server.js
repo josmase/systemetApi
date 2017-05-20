@@ -1,3 +1,4 @@
+"use strixt";
 const cluster = require('cluster');
 const http = require('http');
 const numCPUs = require('os').cpus().length;
@@ -36,7 +37,7 @@ if (cluster.isMaster) {
   app.use(cors());
   app.use(helmet());
 
-  const port = process.env.PORT || 8081;
+  const port = process.env.PORT || 3000;
 
 // middleware to use for all requests
   app.use((req, res, next) => {

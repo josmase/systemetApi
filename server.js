@@ -5,7 +5,7 @@ const database = require('./database.js');
 
 if (cluster.isMaster) {
   console.log(`Master ${process.pid} is running`);
-  database.setup();
+  // database.setup();
 
   // Fork workers.
   for (let i = 0; i < numCPUs; i++) {
@@ -43,7 +43,7 @@ if (cluster.isMaster) {
     next();
   });
 
-  router.get('/', (req, res) => {
+  app.get('/', (req, res) => {
     res.json({ message: 'Use /products' });
   });
 

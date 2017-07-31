@@ -32,11 +32,10 @@
      if (inserts) {
        sql = mysql.format(sql, inserts);
      }
-     database.getConnection((err, connection) => {
+     database.getConnection((err, connection)=>  {
        if (err) {
          reject(err);
        }
-
        connection.query(sql, (error, results) => {
          connection.release();
          if (error) {
@@ -185,7 +184,7 @@
  function updateInterval(databaseSetup) {
    const products =
      {
-       sql: 'LOAD XML LOCAL INFILE ? INTO TABLE ?? ROWS IDENTIFIED BY ? set `changed_timestamp` = NOW()',
+       sql: 'LOAD XML LOCAL INFILE ? INTO TABLE ?? CHARACTER SET UTF8 ROWS IDENTIFIED BY ? set `changed_timestamp` = NOW()',
        url: 'http://www.systembolaget.se/api/assortment/products/xml',
        table: '/mysqlScripts/products.sql',
        name: 'products',
@@ -193,7 +192,7 @@
      };
    const stores =
      {
-       sql: 'LOAD XML LOCAL INFILE ? INTO TABLE ?? ROWS IDENTIFIED BY ? set `changed_timestamp` = NOW()',
+       sql: 'LOAD XML LOCAL INFILE ? INTO TABLE ?? CHARACTER SET UTF8 ROWS IDENTIFIED BY ? set `changed_timestamp` = NOW()',
        url: 'http://www.systembolaget.se/api/assortment/stores/xml',
        table: '/mysqlScripts/stores.sql',
        name: 'stores',

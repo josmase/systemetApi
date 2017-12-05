@@ -2,7 +2,7 @@
 systemetApi is an api for searching the catalog of systembolaget with more precision and with more options than their own search. 
 The api works by importing systembolagets public xml file with all the products listed in it to a MySql database.
 
-##Setup
+## Setup
 
 Download and install [node.js](https://nodejs.org/en/ "Node.js homepage"), [MySql](https://www.mysql.com/ "MySql homepage")
 
@@ -22,13 +22,13 @@ Create a user and the dabase with the root user and password you set when settin
 
 `CREATE DATABASE SYSTEMET;`
 
-##Starting the server
+## Starting the server
 
 To start the api run `node server.js` in the root project directory
 
-##Using the api
+## Using the api
 
-###/products
+### /products
 
 Used to get all the products matching a specific query.
 Use the names of the columns as the key and use Min or Max to get a number within a range.
@@ -41,7 +41,7 @@ To get all the products with a apk between 1 and 2 in the vine category.
 
 To get all the prudcts with a price between 1 and 200 with a name like dworek.
 
-###/product/:id
+### /product/:id
 
 Simply put the Artikelid in the end instead of :id to get the articel with that specific id
 
@@ -49,7 +49,7 @@ Simply put the Artikelid in the end instead of :id to get the articel with that 
 
 To get the product with a Artikelid of 1.
 
-###Columns
+### Columns
 
 Artikelid          INT NOT NULL,
 

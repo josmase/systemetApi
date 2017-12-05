@@ -4,19 +4,6 @@ const http = require('http');
 const numCPUs = require('os').cpus().length;
 const database = require('./database.js');
 
-if (cluster.isMaster) {
-  console.log(`Master ${process.pid} is running`);
-  // database.setup();
-
-  // Fork workers.
-  for (let i = 0; i < numCPUs; i++) {
-    cluster.fork();
-  }
-
-  cluster.on('exit', (worker, code, signal) => {
-    console.log(`worker ${worker.process.pid} died`);
-  });
-} else {
   const express = require('express');
   const app = express();
   const bodyParser = require('body-parser');
@@ -41,6 +28,8 @@ if (cluster.isMaster) {
 
 // middleware to use for all requests
   app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
   });
 
@@ -142,5 +131,3 @@ if (cluster.isMaster) {
   }
 
   app.listen(port);
-  console.log(`Worker ${process.pid} started`);
-}

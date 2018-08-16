@@ -53,7 +53,9 @@ const database = require('./database.js');
       }
     }
 
-    sql += ' ORDER BY apk DESC LIMIT 500';
+    inserts.push(Number.isInteger(req.query.limit) ? req.query.limit : 100);
+
+    sql += ' ORDER BY apk DESC LIMIT ?';
     database.query(sql, inserts)
       .then(result => res.json(result))
       .catch(err => res.json(err));

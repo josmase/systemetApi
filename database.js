@@ -14,11 +14,11 @@
  const systemetapi = require('./systemetApi.js');
 
  const database = mysql.createPool({
-   host: systemetapi.database.host,
-   port: systemetapi.database.port,
-   database: systemetapi.database.name,
-   user: systemetapi.database.user,
-   password: systemetapi.database.password,
+   host: systemetapi.database.host || process.env.DB_HOST,
+   port: systemetapi.database.port || process.env.DB_PORT,
+   database: systemetapi.database.name || process.env.DB_NAME,
+   user: systemetapi.database.user || process.env.DB_USER,
+   password: systemetapi.database.password || process.env.DB_PASSWORD,
    connectionLimit: 100,
  });
 /**

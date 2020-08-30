@@ -3,4 +3,22 @@ services:
   api:
     build: .
     ports:
-      - "3000:3000"
+      - 3000:3000
+    restart: unless-stopped
+    environment:
+      - DB_HOST=mariadb 
+      - DB_PORT=3306
+      - DB_NAMEbolaget
+      - DB_USER=bolaget
+      - DB_PASSWORD=bolaget
+  mariadb:
+    image: linuxserver/mariadb
+    container_name: mariadb
+    environment: 
+      - MYSQL_ROOT_PASSWORD=bolaget
+      - MYSQL_DATABASE=bolaget
+      - MYSQL_USER=bolaget 
+      - MYSQL_PASSWORD=bolaget 
+    ports:
+      - 3306:3306
+    restart: unless-stopped

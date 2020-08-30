@@ -14,11 +14,11 @@
  const systemetapi = require('./systemetApi.js');
 
  const database = mysql.createPool({
-   host: systemetapi.database.host || process.env.DB_HOST,
-   port: systemetapi.database.port || process.env.DB_PORT,
-   database: systemetapi.database.name || process.env.DB_NAME,
-   user: systemetapi.database.user || process.env.DB_USER,
-   password: systemetapi.database.password || process.env.DB_PASSWORD,
+   host:  process.env.DB_HOST || systemetapi.database.host,
+   port: process.env.DB_PORT || systemetapi.database.port,
+   database: process.env.DB_NAME || systemetapi.database.name,
+   user: process.env.DB_USER || systemetapi.database.user,
+   password:process.env.DB_PASSWORD|| systemetapi.database.password,
    connectionLimit: 100,
  });
 /**
@@ -32,10 +32,15 @@
      if (inserts) {
        sql = mysql.format(sql, inserts);
      }
+
+     console.info("Getting connection:",connection);
      database.getConnection((err, connection)=>  {
        if (err) {
+         console.error("Failed to get connection",err);
          reject(err);
+         return;
        }
+       console.info("Running query",query);
        connection.query(sql, (error, results) => {
          connection.release();
          if (error) {

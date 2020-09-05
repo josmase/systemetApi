@@ -1,17 +1,19 @@
 version: '3.8'
 services:
-  api:
+  application:
     build: .
     ports:
       - 3000:3000
     restart: unless-stopped
     environment:
-      - DB_HOST=mariadb
+      - DB_HOST=database
       - DB_PORT=3306
-      - DB_NAMEbolaget
+      - DB_NAME=bolaget
       - DB_USER=bolaget
       - DB_PASSWORD=bolaget
-  mariadb:
+    depends_on: 
+      - database
+  database:
     image: linuxserver/mariadb
     container_name: mariadb
     environment: 

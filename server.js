@@ -133,3 +133,4 @@ const database = require('./database.js');
   }
 
   app.listen(port);
+  database.setup();

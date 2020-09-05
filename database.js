@@ -39,7 +39,7 @@ function databaseQuery(sql, inserts) {
         reject(err);
         return;
       }
-      console.info("Running query", query);
+      console.info("Running query", sql);
       connection.query(sql, (error, results) => {
         connection.release();
         if (error) {
@@ -107,7 +107,7 @@ function getUrl(url) {
  * @returns {Promise}
  */
 async function update() {
-  await readFile(`${__dirname}/mysqlScripts/update.sql`);
+  var data = await readFile(`${__dirname}/mysqlScripts/update.sql`);
   const sql = data.replace(/(\r\n|\n|\r)/gm, ' ').split(';');
   sql.pop();
   for (let i = 0, j = sql.length; i < j; i++) {

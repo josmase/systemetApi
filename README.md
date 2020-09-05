@@ -1,30 +1,16 @@
 # systemetApi
-systemetApi is an api for searching the catalog of systembolaget with more precision and with more options than their own search. 
-The api works by importing systembolagets public xml file with all the products listed in it to a MySql database.
+systemetApi is an api for searching the catalogue of systembolaget with more precision and with more options than their own search. 
+The api works by importing systembolagets public xml file, with all the products listed in it, to a MySql database.
 
 ## Setup
 
-Download and install [node.js](https://nodejs.org/en/ "Node.js homepage"), [MySql](https://www.mysql.com/ "MySql homepage")
+Run `docker-compouse up` in the root of the directory. The following environement variables are used for setting up the database connection (MySQL).
 
-`git clone https://github.com/josmase/systemetApi`
-
-`cd systemetApi`
-
-`npm install`
-
-Create a user and the dabase with the root user and password you set when setting up mysql
-
-`CREATE USER 'systemet'@'localhost' IDENTIFIED BY 'systemet';`
-
-`GRANT ALL PRIVILEGES ON systemet. * TO 'systemet'@'localhost';`
-
-`FLUSH PRIVILEGES;`
-
-`CREATE DATABASE SYSTEMET;`
-
-## Starting the server
-
-To start the api run `node server.js` in the root project directory
+    DB_HOST=database
+    DB_PORT=3306
+    DB_NAME=bolaget
+    DB_USER=bolaget
+    DB_PASSWORD=bolaget
 
 ## Using the api
 

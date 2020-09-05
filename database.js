@@ -59,8 +59,9 @@ function databaseQuery(sql, inserts) {
  * @returns {Promise}
  */
 async function createTables(table) {
+  var sqlFile = __dirname + table;
   try {
-    var data = await readFile(__dirname + table);
+    var data = await readFile(sqlFile);
     try {
       return await databaseQuery(data, null)
     } catch (err) {
@@ -68,7 +69,7 @@ async function createTables(table) {
     }
   }
   catch (err) {
-    throw new Error(`Unable to read table ${table}`, err)
+    throw new Error(`Unable to read table ${sqlFile}`, err)
   }
 }
 

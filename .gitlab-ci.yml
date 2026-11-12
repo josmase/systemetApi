@@ -1,11 +1,14 @@
 include:
   - project: 'josmase/infrastructure/ci-templates'
-    ref: 'v1.0.0'
-    file: 'templates/docker-build.yml'
+    ref: 'v4.0.0'
+    file: 'jobs/docker-build.yml'
 
 publish:
   extends: .docker-build
   variables:
     IMAGE_TAG: $CI_COMMIT_TAG
+    BUILDKIT_EXTRA_FLAGS: >-
+      --import-cache type=registry,ref=${CI_REGISTRY_IMAGE}:buildcache
+      --export-cache type=registry,ref=${CI_REGISTRY_IMAGE}:buildcache,mode=max
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
